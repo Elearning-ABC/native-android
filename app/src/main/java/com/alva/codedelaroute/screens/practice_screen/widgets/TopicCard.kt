@@ -1,4 +1,4 @@
-package com.alva.codedelaroute.screens.home_screen.widgets
+package com.alva.codedelaroute.screens.practice_screen.widgets
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -10,18 +10,24 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.ComponentRegistry
+import coil.ImageLoader
 import coil.compose.*
+import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import com.alva.codedelaroute.models.Topic
 import com.alva.codedelaroute.ui.theme.TitleCardColor
@@ -54,25 +60,22 @@ fun TopicCard(topic: Topic, modifier: Modifier = Modifier) {
                             radius = 100f,
                             center = Offset(60f, 1f)
                         )
-                    ),
-                    contentAlignment = Alignment.Center
+                    ), contentAlignment = Alignment.Center
                 ) {
-                    SubcomposeAsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(topic.icon)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = null
-                    ) {
-                        val state = painter.state
-                        if (state is AsyncImagePainter.State.Loading) {
-                            CircularProgressIndicator()
-                        } else if (state is AsyncImagePainter.State.Error) {
-                            Icon(Icons.Default.Error, contentDescription = null, tint = Color.Red)
-                            Log.d("hi", state.result.throwable.message.toString())
-                        } else {
-                            SubcomposeAsyncImageContent()
+                    val svgLink = topic.icon
+                    val imageLoader = ImageLoader.Builder(LocalContext.current)
+                        .components {
+                            add(SvgDecoder.Factory())
                         }
+                        .build()
+                    CompositionLocalProvider(LocalImageLoader provides imageLoader) {
+                        val painter = rememberImagePainter(svgLink)
+                        Image(
+                            painter = painter,
+                            contentDescription = "SVG Image",
+                            contentScale = ContentScale.Crop,
+                            colorFilter = ColorFilter.tint(Color.White)
+                        )
                     }
                 }
             }

@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
 @Composable
-fun ChildTopicListAppBar(navController: NavController) {
+fun ChildTopicListAppBar(navController: NavController, title: String) {
     SmallTopAppBar(colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent),
         navigationIcon = {
             IconButton(onClick = {
@@ -25,7 +25,7 @@ fun ChildTopicListAppBar(navController: NavController) {
         },
         title = {
             Text(
-                "AL DMV Signes & Situations",
+                title,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 24.sp,
                 lineHeight = 32.sp,

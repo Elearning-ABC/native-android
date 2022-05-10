@@ -5,13 +5,18 @@ import com.alva.codedelaroute.models.Topic
 import com.alva.codedelaroute.repositories.SqlRepo
 
 class TopicViewModel : ViewModel() {
-    var mainTopics = mutableListOf<Topic>()
 
-    fun getMainTopic() {
-        mainTopics = SqlRepo.getTopicsByParentId(5681717746597888)
+    fun getMainTopic(): MutableList<Topic> {
+        return SqlRepo.getTopicsByParentId(5681717746597888)
     }
 
     fun getSubTopic(parentId: Long): MutableList<Topic> {
-        return SqlRepo.getTopicsByParentId(parentId)
+        var lists = SqlRepo.getTopicsByParentId(parentId)
+        lists.sortBy { it.orderIndex }
+        return lists
+    }
+
+    fun getTopicById(id: Long): Topic {
+        return SqlRepo.getTopicById(id)
     }
 }
