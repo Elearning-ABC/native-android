@@ -40,17 +40,22 @@ fun HomeScreen(
                 contentDescription = null,
                 contentScale = ContentScale.Crop
             )
-            Scaffold(topBar = { CommonAppBar() },
+            Scaffold(
+                topBar = { CommonAppBar() },
                 backgroundColor = Color.Transparent,
                 contentColor = Color.Transparent,
                 bottomBar = {
                     MainBottomBar(navController, pagerState)
-                }) { innerPadding ->
-                Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                },
+                modifier = Modifier.fillMaxHeight()
+            ) { innerPadding ->
+                Column(modifier = Modifier.padding(innerPadding).fillMaxHeight()) {
                     ProgressPanel()
                     StartButton(Modifier.padding(horizontal = 47.dp, vertical = 16.dp))
-                    HorizontalPager(count = 3, modifier = Modifier.weight(1f), state = pagerState) { index ->
-                        PracticeScreen(navController)
+                    Box(modifier = Modifier.weight(1f)){
+                        HorizontalPager(count = 3, state = pagerState) { index ->
+                            PracticeScreen(navController)
+                        }
                     }
                 }
             }

@@ -1,9 +1,13 @@
 package com.alva.codedelaroute.screens.practice_screen
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.alva.codedelaroute.navigations.Routes
@@ -19,6 +23,8 @@ fun PracticeScreen(navController: NavController, topicViewModel: TopicViewModel 
             TopicCard(mainTopics[it], Modifier.clickable {
                 navController.navigate(Routes.ChildTopicListScreen.name + "/${mainTopics[it].id}")
             })
+            if (it == mainTopics.size - 1) Spacer(modifier = Modifier.size(10.dp))
         }
+
     }
 }

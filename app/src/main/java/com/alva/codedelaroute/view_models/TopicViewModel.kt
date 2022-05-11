@@ -7,7 +7,9 @@ import com.alva.codedelaroute.repositories.SqlRepo
 class TopicViewModel : ViewModel() {
 
     fun getMainTopic(): MutableList<Topic> {
-        return SqlRepo.getTopicsByParentId(5681717746597888)
+        val result = SqlRepo.getTopicsByParentId(5681717746597888)
+        result.sortBy { it.orderIndex }
+        return result
     }
 
     fun getSubTopic(parentId: Long): MutableList<Topic> {

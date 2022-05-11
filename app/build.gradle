@@ -81,5 +81,8 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.0.0-rc03")
     implementation("io.coil-kt:coil-svg:2.0.0-rc03")
+
+    implementation 'com.google.code.gson:gson:2.9.0'
+
 }
 

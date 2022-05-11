@@ -1,14 +1,18 @@
 package com.alva.codedelaroute.navigations
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.alva.codedelaroute.screens.ChildTopicListScreen
+import com.alva.codedelaroute.models.Topic
+import com.alva.codedelaroute.screens.child_topic_list_screen.ChildTopicListScreen
 import com.alva.codedelaroute.screens.HomeScreen
 import com.alva.codedelaroute.screens.question_screen.QuestionScreen
+import com.alva.codedelaroute.utils.fromJson
+import com.google.gson.Gson
 
 @Composable
 fun AppNavigation() {
