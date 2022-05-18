@@ -1,5 +1,6 @@
 package com.alva.codedelaroute.screens.question_screen.widgets
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons

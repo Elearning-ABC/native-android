@@ -13,6 +13,7 @@ object SqlRepo : Application() {
     private var questionRepo: QuestionRepo
     private var topicQuestionRepo: TopicQuestionRepo
     private var questionProgressRepo: QuestionProgressRepo
+    private var topicProgressRepo: TopicProgressRepo
 
     init {
         val configuration = RealmConfiguration.Builder(
@@ -25,7 +26,8 @@ object SqlRepo : Application() {
                 StateInfo::class,
                 Topic::class,
                 TopicQuestion::class,
-                QuestionProgress::class
+                QuestionProgress::class,
+                TopicProgress::class
             )
         ).encryptionKey(byteKey).name("default.realm").build()
         realm = Realm.open(configuration)
@@ -34,6 +36,12 @@ object SqlRepo : Application() {
         questionRepo = QuestionRepo(realm)
         topicQuestionRepo = TopicQuestionRepo(realm)
         questionProgressRepo = QuestionProgressRepo(realm)
+        topicProgressRepo = TopicProgressRepo(realm)
+    }
+
+    override fun onTerminate() {
+        realm.close()
+        super.onTerminate()
     }
 
     //Topic Queries
@@ -56,7 +64,6 @@ object SqlRepo : Application() {
     }
 
     //QuestionProgress Queries
-
     fun getAnsweredQuestionsByTopicId(topicId: Long): MutableList<QuestionProgress> {
         return questionProgressRepo.getAnsweredQuestionsByTopicId(topicId)
     }
@@ -67,5 +74,14 @@ object SqlRepo : Application() {
 
     suspend fun addOrUpdateQuestionProgressToRepo(questionProgress: QuestionProgress) {
         questionProgressRepo.addOrUpdateQuestionProgressToRepo(questionProgress)
+    }
+
+    //TopicProgress Queries
+    fun getTopicProgressByTopicId(topicId: Long): TopicProgress {
+        return topicProgressRepo.getTopicProgressByTopicId(topicId)
+    }
+
+    suspend fun addOrUpdateTopicProgressToRepo(topicProgress: TopicProgress) {
+        topicProgressRepo.addOrUpdateTopicProgressToRepo(topicProgress)
     }
 }

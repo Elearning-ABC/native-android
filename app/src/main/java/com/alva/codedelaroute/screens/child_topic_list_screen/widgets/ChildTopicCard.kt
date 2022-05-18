@@ -13,16 +13,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alva.codedelaroute.models.Topic
+import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.widgets.CustomProgressBar
 
 @Composable
-fun ChildTopicCard(topic: Topic, modifier: Modifier = Modifier) {
+fun ChildTopicCard(topic: Topic, modifier: Modifier = Modifier, subTopicProgress: TopicProgress) {
     Surface(
         modifier = modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp).fillMaxWidth(),
         shape = RoundedCornerShape(corner = CornerSize(8.dp)),
         color = Color.White.copy(alpha = 0.8f),
         elevation = 0.dp,
     ) {
+        var percentage = subTopicProgress.correctNumber.toFloat() / subTopicProgress.totalQuestionNumber
+
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
@@ -39,7 +42,7 @@ fun ChildTopicCard(topic: Topic, modifier: Modifier = Modifier) {
                     Modifier.height(8.dp).clip(shape = RoundedCornerShape(4.dp)),
                     Color(0xFFCAD1F5),
                     Color(0xFF2B5AF5),
-                    0.3f,
+                    percentage,
                 )
             }
         }

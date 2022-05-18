@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelStoreOwner
 import com.alva.codedelaroute.models.Answer
 import com.alva.codedelaroute.models.Question
 import com.alva.codedelaroute.models.QuestionProgress
+import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.utils.AnswerStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -29,11 +30,13 @@ class AnswerViewModel : ViewModel() {
         enabled: MutableState<Boolean>,
         coroutine: CoroutineScope,
         answerStatus: MutableState<AnswerStatus>,
-        checkFinishedQuestion: MutableState<Boolean>
+        checkFinishedQuestion: MutableState<Boolean>,
+        subTopicProgress: TopicProgress,
+        mainTopicProgress: TopicProgress
     ) {
         coroutine.launch {
             questionViewModel.onAnswerClick(
-                answer.id, questionProgress, question
+                answer.id, questionProgress, question, subTopicProgress, mainTopicProgress
             )
             checkFinishedQuestion.value = questionViewModel.isFinishQuestion(
                 question, currentQuestionProgress = questionProgress

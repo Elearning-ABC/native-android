@@ -1,7 +1,5 @@
 package com.alva.codedelaroute.screens.child_topic_list_screen
 
-import android.net.Uri
-import android.os.Parcel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,7 +7,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,10 +21,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.alva.codedelaroute.R
 import com.alva.codedelaroute.models.Topic
+import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.navigations.Routes
 import com.alva.codedelaroute.screens.child_topic_list_screen.widgets.ChildTopicCard
 import com.alva.codedelaroute.screens.child_topic_list_screen.widgets.ChildTopicListAppBar
-import com.alva.codedelaroute.utils.toJson
 import com.alva.codedelaroute.view_models.TopicViewModel
 import com.alva.codedelaroute.widgets.CustomProgressBar
 import com.google.accompanist.insets.ProvideWindowInsets
@@ -43,18 +40,30 @@ fun ChildTopicListScreen(
     val parentTopic = topicViewModel.getTopicById(parentId.toLong())
     val subTopics = topicViewModel.getSubTopic(parentId.toLong())
 
+    val subTopicProgressList = mutableListOf<TopicProgress>()
+    for (subTopic in subTopics) {
+        subTopicProgressList.add(topicViewModel.getTopicProgressByTopicId(subTopic.id.toLong()))
+    }
+
+    val mainTopicProgress = topicViewModel.getTopicProgressByTopicId(parentTopic.id.toLong())
+
     Surface(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.background_2),
             contentDescription = null,
             contentScale = ContentScale.Crop
         )
-        ChildTopicListPanel(navController, subTopics, parentTopic)
+        ChildTopicListPanel(navController, subTopics, parentTopic, subTopicProgressList, mainTopicProgress)
     }
 }
 
 @Composable
-fun ChildTopicList(modifier: Modifier = Modifier, navController: NavController, subTopics: MutableList<Topic>) {
+fun ChildTopicList(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    subTopics: MutableList<Topic>,
+    subTopicProgressList: MutableList<TopicProgress>
+) {
     Surface(modifier = modifier, shape = RoundedCornerShape(corner = CornerSize(20.dp))) {
         Image(
             painter = painterResource(R.drawable.background),
@@ -65,14 +74,22 @@ fun ChildTopicList(modifier: Modifier = Modifier, navController: NavController, 
             items(subTopics.size) {
                 ChildTopicCard(subTopics[it], Modifier.clickable {
                     navController.navigate(Routes.QuestionScreen.name + "/${subTopics[it].id}")
-                })
+                }, subTopicProgressList[it])
             }
         }
     }
 }
 
 @Composable
-fun ChildTopicListPanel(navController: NavController, subTopics: MutableList<Topic>, parentTopic: Topic) {
+fun ChildTopicListPanel(
+    navController: NavController,
+    subTopics: MutableList<Topic>,
+    parentTopic: Topic,
+    subTopicProgressList: MutableList<TopicProgress>,
+    mainTopicProgress: TopicProgress
+) {
+    val percentage = mainTopicProgress.correctNumber.toFloat() / mainTopicProgress.totalQuestionNumber
+
     ProvideWindowInsets {
         Scaffold(
             modifier = Modifier.fillMaxSize().systemBarsPadding(true),
@@ -84,23 +101,28 @@ fun ChildTopicListPanel(navController: NavController, subTopics: MutableList<Top
                         Modifier.height(8.dp).clip(shape = RoundedCornerShape(4.dp)),
                         Color(0xFFCAD1F5),
                         Color(0xFF2B5AF5),
-                        0.3f,
+                        percentage,
                     )
                 }
-                ProgressCheckTable(parentTopic.totalQuestion)
+                ProgressCheckTable(mainTopicProgress)
                 Spacer(modifier = Modifier.height(100.dp))
-                ChildTopicList(Modifier.weight(1f).fillMaxWidth(), navController, subTopics = subTopics)
+                ChildTopicList(
+                    Modifier.weight(1f).fillMaxWidth(),
+                    navController,
+                    subTopics = subTopics,
+                    subTopicProgressList = subTopicProgressList
+                )
             }
         }
     }
 }
 
 @Composable
-fun ProgressCheckTable(totalQuestions: Int) {
+fun ProgressCheckTable(mainTopicProgress: TopicProgress) {
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 30.dp).width(150.dp)) {
-        ProgressRow("Total", totalQuestions)
+        ProgressRow("Total", mainTopicProgress.totalQuestionNumber)
         Spacer(modifier = Modifier.height(10.dp))
-        ProgressRow("Answered", 0)
+        ProgressRow("Answered", mainTopicProgress.correctNumber)
     }
 }
 

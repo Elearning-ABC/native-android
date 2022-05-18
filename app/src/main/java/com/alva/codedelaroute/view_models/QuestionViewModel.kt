@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.alva.codedelaroute.models.Question
 import com.alva.codedelaroute.models.QuestionProgress
+import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.repositories.SqlRepo
 
 class QuestionViewModel : ViewModel() {
@@ -65,15 +66,17 @@ class QuestionViewModel : ViewModel() {
     fun checkFinishedTopic(questionList: MutableList<Question>, parentId: Long): Boolean {
         val questionProgressList = SqlRepo.getAnsweredQuestionsByTopicId(parentId)
         if (questionList.size != questionProgressList.size) return false
-        for (question in questionProgressList) {
-            if (question.boxNum != 1) {
-                return false
-            }
-        }
+        if (questionProgressList.any { it.boxNum != 1 }) return false
         return true
     }
 
-    suspend fun onAnswerClick(answerId: String, currentQuestionProgress: QuestionProgress, question: Question) {
+    suspend fun onAnswerClick(
+        answerId: String,
+        currentQuestionProgress: QuestionProgress,
+        question: Question,
+        subTopicProgress: TopicProgress,
+        mainTopicProgress: TopicProgress
+    ) {
         if (!currentQuestionProgress.choiceSelectedIds.contains(answerId)) {
             currentQuestionProgress.choiceSelectedIds.add(answerId)
             if (isFinishQuestion(
@@ -82,7 +85,13 @@ class QuestionViewModel : ViewModel() {
             ) {
                 if (currentQuestionProgress.choiceSelectedIds.any { answerID -> !(question.choices.filter { it.id == answerID }[0].isCorrect) }) {
                     currentQuestionProgress.boxNum = -1
-                } else currentQuestionProgress.boxNum = 1
+                } else {
+                    currentQuestionProgress.boxNum = 1
+//                    subTopicProgress.correctNumber += 1
+//                    mainTopicProgress.correctNumber += 1
+                    SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress = subTopicProgress)
+                    SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress = mainTopicProgress)
+                }
             }
             addOrUpdateQuestionProgressToRepo(currentQuestionProgress)
         }

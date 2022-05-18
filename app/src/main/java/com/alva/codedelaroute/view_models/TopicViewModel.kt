@@ -3,7 +3,9 @@ package com.alva.codedelaroute.view_models
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
+import com.alva.codedelaroute.models.QuestionProgress
 import com.alva.codedelaroute.models.Topic
+import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.repositories.SqlRepo
 
 class TopicViewModel : ViewModel() {
@@ -26,5 +28,13 @@ class TopicViewModel : ViewModel() {
 
     fun getTopicById(id: Long): Topic {
         return SqlRepo.getTopicById(id)
+    }
+
+    fun getTopicProgressByTopicId(topicId: Long): TopicProgress {
+        return SqlRepo.getTopicProgressByTopicId(topicId)
+    }
+
+    private suspend fun addOrUpdateTopicProgressToRepo(topicProgress: TopicProgress) {
+        SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress)
     }
 }

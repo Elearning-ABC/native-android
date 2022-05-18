@@ -43,10 +43,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.alva.codedelaroute.R
-import com.alva.codedelaroute.models.Answer
-import com.alva.codedelaroute.models.Question
-import com.alva.codedelaroute.models.QuestionProgress
-import com.alva.codedelaroute.models.Topic
+import com.alva.codedelaroute.models.*
 import com.alva.codedelaroute.navigations.Routes
 import com.alva.codedelaroute.screens.question_screen.widgets.AnswerItem
 import com.alva.codedelaroute.screens.question_screen.widgets.QuestionAppBar
@@ -91,6 +88,10 @@ fun QuestionScreen(
     val questionProgress = questionViewModel.getQuestionProgressByQuestionId(
         currentQuestion!!.id.toLong(), subTopicId.toLong()
     )
+
+    var subTopicProgress = topicViewModel.getTopicProgressByTopicId(subTopicId.toLong())
+
+    var mainTopicProgress = topicViewModel.getTopicProgressByTopicId(mainTopic.id.toLong())
 
     val coroutine = rememberCoroutineScope()
 
@@ -166,7 +167,9 @@ fun QuestionScreen(
                                         answerViewModel,
                                         coroutine,
                                         answerStatus,
-                                        checkFinishedQuestion
+                                        checkFinishedQuestion,
+                                        subTopicProgress,
+                                        mainTopicProgress
                                     )
                                 } else FinishedAnswerPanel(
                                     currentQuestion, questionViewModel, questionProgress, enabled
@@ -189,7 +192,9 @@ fun AnswerPanel(
     answerViewModel: AnswerViewModel,
     coroutine: CoroutineScope,
     answerStatus: MutableState<AnswerStatus>,
-    checkFinishedQuestion: MutableState<Boolean>
+    checkFinishedQuestion: MutableState<Boolean>,
+    subTopicProgress: TopicProgress,
+    mainTopicProgress: TopicProgress
 ) {
     LazyColumn {
         items(items = question.choices, key = { item: Answer -> item.id }) {
@@ -209,7 +214,9 @@ fun AnswerPanel(
                     enabled = enabled,
                     coroutine = coroutine,
                     answerStatus = answerStatus,
-                    checkFinishedQuestion = checkFinishedQuestion
+                    checkFinishedQuestion = checkFinishedQuestion,
+                    subTopicProgress = subTopicProgress,
+                    mainTopicProgress = mainTopicProgress
                 )
             }
         }
