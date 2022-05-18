@@ -17,14 +17,25 @@ class QuestionProgressRepo(val realm: Realm) {
         return result;
     }
 
-    fun getQuestionProgressById(id: Long): QuestionProgress {
-        val result = realm.query(QuestionProgress::class).query("questionId = '$id'").find()
-        return result[0]
+    fun getQuestionProgressByQuestionId(questionId: Long, topicId: Long): QuestionProgress {
+        val result = realm.query(QuestionProgress::class).query("questionId = '$questionId'").find()
+        return if (result.isEmpty()) {
+            var questionProgress = QuestionProgress()
+            questionProgress.id = System.currentTimeMillis().toString()
+            questionProgress.questionId = questionId.toString()
+            questionProgress.topicId = topicId.toString()
+            questionProgress.lastUpdate = System.currentTimeMillis().toDouble()
+            questionProgress
+        } else {
+            result[0]
+        }
     }
 
     suspend fun addOrUpdateQuestionProgressToRepo(questionProgress: QuestionProgress) {
         realm.write {
-            val result = realm.query(QuestionProgress::class).query("id = '${questionProgress.questionId}'").first().find()
+            val result =
+                realm.query(QuestionProgress::class).query("questionId = '${questionProgress.questionId}'").first()
+                    .find()
             if (result == null) {
                 this.copyToRealm(questionProgress)
             } else {

@@ -15,7 +15,11 @@ import com.alva.codedelaroute.screens.practice_screen.widgets.TopicCard
 import com.alva.codedelaroute.view_models.TopicViewModel
 
 @Composable
-fun PracticeScreen(navController: NavController, topicViewModel: TopicViewModel = viewModel()) {
+fun PracticeScreen(
+    navController: NavController, topicViewModel: TopicViewModel = viewModel(
+        viewModelStoreOwner = TopicViewModel.viewModelStoreOwner, key = TopicViewModel.key
+    )
+) {
     val mainTopics = topicViewModel.getMainTopic()
 
     LazyColumn {

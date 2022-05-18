@@ -1,6 +1,6 @@
 package com.alva.codedelaroute.widgets
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -77,7 +78,19 @@ fun ProgressPanel() {
                 }
             }
 
-            AnimatedVisibility(visibleState = state) {
+            val density = LocalDensity.current
+
+            AnimatedVisibility(visibleState = state, enter = slideInVertically {
+                // Slide in from 40 dp from the top.
+                with(density) { -40.dp.roundToPx() }
+            } + expandVertically(
+                // Expand from the top.
+                expandFrom = Alignment.Top
+            ) + fadeIn(
+                // Fade in with the initial alpha of 0.3f.
+                initialAlpha = 0.3f
+            ),
+                exit = shrinkVertically() + fadeOut()) {
                 Image(
                     painterResource(R.drawable.graph), contentDescription = null, modifier = Modifier.width(
                         LocalConfiguration.current.screenWidthDp.dp
@@ -86,9 +99,9 @@ fun ProgressPanel() {
             }
 
             Icon(
-                if (state.currentState) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
+                if (state.currentState) painterResource(R.drawable.arrow_up) else painterResource(R.drawable.arrow_down),
                 contentDescription = null,
-                modifier = Modifier.clickable {
+                modifier = Modifier.padding(5.dp).size(24.dp).clickable {
                     state.targetState = !state.currentState
                 })
         }

@@ -1,10 +1,16 @@
 package com.alva.codedelaroute.view_models
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 import com.alva.codedelaroute.models.Topic
 import com.alva.codedelaroute.repositories.SqlRepo
 
 class TopicViewModel : ViewModel() {
+    companion object {
+        var viewModelStoreOwner = ViewModelStoreOwner { ViewModelStore() }
+        var key = "TopicViewModel"
+    }
 
     fun getMainTopic(): MutableList<Topic> {
         val result = SqlRepo.getTopicsByParentId(5681717746597888)

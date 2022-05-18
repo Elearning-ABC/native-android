@@ -16,7 +16,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        copyBundledRealmFile(applicationContext.getResources().openRawResource(R.raw.db), "default.realm")
+        copyBundledRealmFile(applicationContext.resources.openRawResource(R.raw.db), "default.realm")
         setContent {
             MyApp {
                 AppNavigation()
@@ -26,15 +26,17 @@ class MainActivity : ComponentActivity() {
 
     fun copyBundledRealmFile(inputStream: InputStream, outFileName: String): String? {
         try {
-            val file = File(this.getFilesDir(), outFileName)
-            val outputStream = FileOutputStream(file)
-            val buf = ByteArray(1024)
-            var bytesRead: Int
-            while (inputStream.read(buf).also { bytesRead = it } > 0) {
-                outputStream.write(buf, 0, bytesRead)
-            }
-            outputStream.close()
-            return file.getAbsolutePath()
+            val file = File(this.filesDir, outFileName)
+            return if (!file.exists()) {
+                val outputStream = FileOutputStream(file)
+                val buf = ByteArray(1024)
+                var bytesRead: Int
+                while (inputStream.read(buf).also { bytesRead = it } > 0) {
+                    outputStream.write(buf, 0, bytesRead)
+                }
+                outputStream.close()
+                file.absolutePath
+            } else null
         } catch (e: IOException) {
             e.printStackTrace()
         }

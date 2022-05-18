@@ -34,7 +34,12 @@ import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.systemBarsPadding
 
 @Composable
-fun ChildTopicListScreen(navController: NavController, parentId: String, topicViewModel: TopicViewModel = viewModel()) {
+fun ChildTopicListScreen(
+    navController: NavController, parentId: String, topicViewModel: TopicViewModel = viewModel(
+        viewModelStoreOwner = TopicViewModel.viewModelStoreOwner,
+        key = TopicViewModel.key
+    )
+) {
     val parentTopic = topicViewModel.getTopicById(parentId.toLong())
     val subTopics = topicViewModel.getSubTopic(parentId.toLong())
 

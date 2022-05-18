@@ -61,8 +61,8 @@ object SqlRepo : Application() {
         return questionProgressRepo.getAnsweredQuestionsByTopicId(topicId)
     }
 
-    fun getQuestionProgressById(id: Long): QuestionProgress {
-        return questionProgressRepo.getQuestionProgressById(id)
+    fun getQuestionProgressByQuestionId(questionId: Long, topicId: Long): QuestionProgress {
+        return questionProgressRepo.getQuestionProgressByQuestionId(questionId, topicId)
     }
 
     suspend fun addOrUpdateQuestionProgressToRepo(questionProgress: QuestionProgress) {
