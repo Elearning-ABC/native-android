@@ -34,18 +34,34 @@ fun QuestionProgressBar(
             backgroundColor = Color.Transparent,
             progress = trueIndicatorProgress.value,
         )
-        LaunchedEffect(checkFinishedQuestion.value) {
-            trueIndicatorProgress.animateTo(
-                questionViewModel.getTrueQuestionsPercent(subTopicId.toLong()),
-                animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing)
-            )
-        }
-        LaunchedEffect(checkFinishedQuestion.value) {
-            falseIndicatorProgress.animateTo(
-                questionViewModel.getTrueQuestionsPercent(subTopicId.toLong()) + questionViewModel.getFalseQuestionsPercent(
-                    subTopicId.toLong()
-                ), animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing)
-            )
+        if (checkFinishedQuestion.value) {
+            LaunchedEffect(checkFinishedQuestion.value) {
+                trueIndicatorProgress.animateTo(
+                    questionViewModel.getTrueQuestionsPercent(subTopicId.toLong()),
+                    animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing)
+                )
+            }
+            LaunchedEffect(checkFinishedQuestion.value) {
+                falseIndicatorProgress.animateTo(
+                    questionViewModel.getTrueQuestionsPercent(subTopicId.toLong()) + questionViewModel.getFalseQuestionsPercent(
+                        subTopicId.toLong()
+                    ), animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing)
+                )
+            }
+        } else {
+            LaunchedEffect(!checkFinishedQuestion.value) {
+                trueIndicatorProgress.animateTo(
+                    questionViewModel.getTrueQuestionsPercent(subTopicId.toLong()),
+                    animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing)
+                )
+            }
+            LaunchedEffect(!checkFinishedQuestion.value) {
+                falseIndicatorProgress.animateTo(
+                    questionViewModel.getTrueQuestionsPercent(subTopicId.toLong()) + questionViewModel.getFalseQuestionsPercent(
+                        subTopicId.toLong()
+                    ), animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing)
+                )
+            }
         }
     }
 }

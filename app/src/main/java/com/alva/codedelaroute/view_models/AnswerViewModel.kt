@@ -28,16 +28,17 @@ class AnswerViewModel : ViewModel() {
         panelColorState: MutableState<Color>,
         enabled: MutableState<Boolean>,
         coroutine: CoroutineScope,
-        answerStatus: MutableState<AnswerStatus>
+        answerStatus: MutableState<AnswerStatus>,
+        checkFinishedQuestion: MutableState<Boolean>
     ) {
         coroutine.launch {
             questionViewModel.onAnswerClick(
                 answer.id, questionProgress, question
             )
-            if (!questionViewModel.isFinishQuestion(
-                    question, currentQuestionProgress = questionProgress
-                )
-            ) {
+            checkFinishedQuestion.value = questionViewModel.isFinishQuestion(
+                question, currentQuestionProgress = questionProgress
+            )
+            if (!checkFinishedQuestion.value) {
                 panelColorState.value = Color(0xffF6F6F6)
             } else {
                 if (answer.isCorrect) {

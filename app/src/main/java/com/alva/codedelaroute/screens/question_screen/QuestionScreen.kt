@@ -208,9 +208,9 @@ fun AnswerPanel(
                     panelColorState = panelColorState,
                     enabled = enabled,
                     coroutine = coroutine,
-                    answerStatus = answerStatus
+                    answerStatus = answerStatus,
+                    checkFinishedQuestion = checkFinishedQuestion
                 )
-                checkFinishedQuestion.value = true
             }
         }
     }
