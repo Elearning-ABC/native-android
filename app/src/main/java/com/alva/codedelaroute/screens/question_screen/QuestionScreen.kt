@@ -81,10 +81,6 @@ fun QuestionScreen(
 
     val currentQuestion = questionViewModel.goToNextQuestion(questions, subTopicId.toLong())
 
-    if (currentQuestion == null) {
-        navController.popBackStack()
-    }
-
     val questionProgress = questionViewModel.getQuestionProgressByQuestionId(
         currentQuestion!!.id.toLong(), subTopicId.toLong()
     )
@@ -129,15 +125,10 @@ fun QuestionScreen(
 
                         val answerStatus = remember {
                             mutableStateOf(
-                                if (!questionViewModel.isFinishQuestion(
-                                        currentQuestion, currentQuestionProgress = questionProgress
-                                    )
-                                ) {
-                                    AnswerStatus.None
-                                } else {
-                                    if (questionProgress.choiceSelectedIds.any { answerId -> !currentQuestion.choices.filter { it.id == answerId }[0].isCorrect }) AnswerStatus.False
-                                    else AnswerStatus.True
-                                }
+                                questionViewModel.getAnswerStatus(
+                                    question = currentQuestion,
+                                    currentQuestionProgress = questionProgress
+                                )
                             )
                         }
 
@@ -309,30 +300,40 @@ fun QuestionContainer(question: Question, answerStatus: MutableState<AnswerStatu
         AnswerStatus.None -> Color.LightGray
         AnswerStatus.True -> Color(0xFF00C17C)
         AnswerStatus.False -> Color(227, 30, 24).copy(alpha = 0.52f)
+        AnswerStatus.TryAgainWithTrue -> Color(0xFF00C17C)
+        AnswerStatus.TryAgainWithFalse -> Color(0xFFEBAD34)
     }
 
     val questionHeader = when (answerStatus.value) {
         AnswerStatus.None -> "NEW QUESTION"
         AnswerStatus.True -> "CORRECT"
         AnswerStatus.False -> "INCORRECT"
+        AnswerStatus.TryAgainWithTrue -> "REVIEWING"
+        AnswerStatus.TryAgainWithFalse -> "LEARNING"
     }
 
     val remindingText = when (answerStatus.value) {
         AnswerStatus.None -> ""
         AnswerStatus.True -> "You will not see this question in a while"
         AnswerStatus.False -> "You will see this question soon"
+        AnswerStatus.TryAgainWithTrue -> "You got this question last time"
+        AnswerStatus.TryAgainWithFalse -> "You got this wrong last time"
     }
 
     val textColor = when (answerStatus.value) {
         AnswerStatus.None -> Color(0xFF4D4D4D)
         AnswerStatus.True -> Color(0xFF00C17C)
         AnswerStatus.False -> Color(227, 30, 24).copy(alpha = 0.52f)
+        AnswerStatus.TryAgainWithTrue -> Color(0xFF00C17C)
+        AnswerStatus.TryAgainWithFalse -> Color(0xFFEBAD34)
     }
 
     val alertIcon = when (answerStatus.value) {
         AnswerStatus.None -> null
         AnswerStatus.True -> painterResource(R.drawable.check_circle)
         AnswerStatus.False -> painterResource(R.drawable.alert_circle)
+        AnswerStatus.TryAgainWithTrue -> painterResource(R.drawable.check_circle)
+        AnswerStatus.TryAgainWithFalse -> painterResource(R.drawable.alert_circle)
     }
 
     Box(modifier = Modifier.fillMaxWidth()) {

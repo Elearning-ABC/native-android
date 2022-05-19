@@ -22,8 +22,14 @@ fun QuestionProgressBar(
         viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner, key = QuestionViewModel.key
     ), subTopicId: String, checkFinishedQuestion: MutableState<Boolean>
 ) {
-    val trueIndicatorProgress = remember { Animatable(0f) }
-    val falseIndicatorProgress = remember { Animatable(0f) }
+    val trueIndicatorProgress = remember { Animatable(questionViewModel.getTrueQuestionsPercent(subTopicId.toLong())) }
+    val falseIndicatorProgress = remember {
+        Animatable(
+            questionViewModel.getTrueQuestionsPercent(subTopicId.toLong()) + questionViewModel.getFalseQuestionsPercent(
+                subTopicId.toLong()
+            )
+        )
+    }
 
     Surface(color = Color.Transparent, modifier = Modifier.fillMaxWidth()) {
         LinearProgressIndicator(
@@ -48,7 +54,7 @@ fun QuestionProgressBar(
                     ), animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing)
                 )
             }
-        } else {
+        } /*else {
             LaunchedEffect(!checkFinishedQuestion.value) {
                 trueIndicatorProgress.animateTo(
                     questionViewModel.getTrueQuestionsPercent(subTopicId.toLong()),
@@ -62,6 +68,6 @@ fun QuestionProgressBar(
                     ), animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing)
                 )
             }
-        }
+        }*/
     }
 }

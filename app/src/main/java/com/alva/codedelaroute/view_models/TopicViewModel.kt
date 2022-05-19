@@ -34,7 +34,9 @@ class TopicViewModel : ViewModel() {
         return SqlRepo.getTopicProgressByTopicId(topicId)
     }
 
-    private suspend fun addOrUpdateTopicProgressToRepo(topicProgress: TopicProgress) {
+    private suspend fun addOrUpdateTopicProgressToRepo(
+        topicProgress: TopicProgress,
+    ) {
         SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress)
     }
 }

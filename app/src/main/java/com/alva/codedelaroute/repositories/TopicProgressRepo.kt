@@ -29,6 +29,7 @@ class TopicProgressRepo(val realm: Realm) {
             val result =
                 this.query(TopicProgress::class).query("topicId = '${topicProgress.topicId}'").first()
                     .find()
+
             if (result == null) {
                 topicProgress.correctNumber = 1
                 this.copyToRealm(topicProgress)
@@ -41,7 +42,6 @@ class TopicProgressRepo(val realm: Realm) {
                 tmp.lastUpdate = System.currentTimeMillis().toDouble()
                 this.delete(result)
                 this.copyToRealm(tmp)
-
             }
         }
     }

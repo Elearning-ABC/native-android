@@ -8,6 +8,7 @@ import com.alva.codedelaroute.models.Question
 import com.alva.codedelaroute.models.QuestionProgress
 import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.repositories.SqlRepo
+import com.alva.codedelaroute.utils.AnswerStatus
 
 class QuestionViewModel : ViewModel() {
     companion object {
@@ -44,6 +45,8 @@ class QuestionViewModel : ViewModel() {
         //getQuestion
         if (tmpList.size > 0) {
             return tmpList[0]
+        } else if (questionProgressList.any { it.choiceSelectedIds.isEmpty() }) {
+            return questionList.filter { question -> question.id == (questionProgressList.filter { it.choiceSelectedIds.isEmpty() })[0].id }[0]
         } else {
             questionProgressList.sortBy { it.lastUpdate }
             questionProgressList.reverse()
@@ -65,9 +68,15 @@ class QuestionViewModel : ViewModel() {
 
     fun checkFinishedTopic(questionList: MutableList<Question>, parentId: Long): Boolean {
         val questionProgressList = SqlRepo.getAnsweredQuestionsByTopicId(parentId)
-        if (questionList.size != questionProgressList.size) return false
+        if (questionList.size > questionProgressList.size) return false
         if (questionProgressList.any { it.boxNum != 1 }) return false
         return true
+    }
+
+    fun isQuestionAnsweredTrue(questionId: Long, topicId: Long): Boolean {
+        val questionProgress = getQuestionProgressByQuestionId(questionId, topicId)
+        if (questionProgress.boxNum == 1) return true
+        return false
     }
 
     suspend fun onAnswerClick(
@@ -89,8 +98,10 @@ class QuestionViewModel : ViewModel() {
                     currentQuestionProgress.boxNum = 1
 //                    subTopicProgress.correctNumber += 1
 //                    mainTopicProgress.correctNumber += 1
-                    SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress = subTopicProgress)
-                    SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress = mainTopicProgress)
+                    if (!isQuestionAnsweredTrue(questionId = question.id.toLong(), topicId = currentQuestionProgress.topicId.toLong())) {
+                        SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress = subTopicProgress)
+                        SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress = mainTopicProgress)
+                    }
                 }
             }
             addOrUpdateQuestionProgressToRepo(currentQuestionProgress)
@@ -99,6 +110,21 @@ class QuestionViewModel : ViewModel() {
 
     fun isFinishQuestion(question: Question, currentQuestionProgress: QuestionProgress): Boolean {
         return question.choices.filter { it.isCorrect }.size == currentQuestionProgress.choiceSelectedIds.size
+    }
+
+    fun getAnswerStatus(question: Question, currentQuestionProgress: QuestionProgress): AnswerStatus {
+        return if (!isFinishQuestion(question, currentQuestionProgress)) {
+            when (currentQuestionProgress.boxNum) {
+                1 -> AnswerStatus.TryAgainWithTrue
+                -1 -> AnswerStatus.TryAgainWithFalse
+                else -> AnswerStatus.None
+            }
+        } else {
+            when (currentQuestionProgress.boxNum) {
+                1 -> AnswerStatus.True
+                else -> AnswerStatus.False
+            }
+        }
     }
 
     fun checkClickedAnswerList(answerId: String, currentQuestionProgress: QuestionProgress): Boolean {

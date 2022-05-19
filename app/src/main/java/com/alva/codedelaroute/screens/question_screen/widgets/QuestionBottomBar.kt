@@ -49,10 +49,13 @@ fun QuestionBottomBar(
             )
         })
         NavigationBarItem(onClick = {
-            if (questionViewModel.isFinishQuestion(question, questionProgress)) {
-                if (questionViewModel.checkFinishedTopic(questionList, subTopicId.toLong())) {
-                    navController.popBackStack()
-                } else {
+            if (questionViewModel.checkFinishedTopic(questionList, subTopicId.toLong())) {
+                Log.d(
+                    "Hello", questionViewModel.checkFinishedTopic(questionList, subTopicId.toLong()).toString()
+                )
+                navController.navigateUp()
+            } else {
+                if (questionViewModel.isFinishQuestion(question, questionProgress)) {
                     navController.popBackStack()
                     navController.navigate(Routes.QuestionScreen.name + "/$subTopicId")
                 }
