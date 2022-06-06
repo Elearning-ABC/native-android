@@ -32,6 +32,7 @@ import androidx.navigation.NavController
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.alva.codedelaroute.R
 import com.alva.codedelaroute.navigations.Routes
+import com.alva.codedelaroute.utils.ReviewQuestionProperty
 import com.alva.codedelaroute.widgets.CustomAlertDialog
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.view_models.TopicViewModel
@@ -152,7 +153,7 @@ fun FinishTopicScreen(
                         subTopicId.toLong()
                     )
                     navController.popBackStack()
-                    navController.navigate(Routes.QuestionScreen.name + "/${subTopicId}")
+                    navController.navigate(Routes.QuestionScreen.name + "/${subTopicId}/${ReviewQuestionProperty.None.name}")
                 }
                 openDialog.value = false
             },
@@ -187,7 +188,7 @@ fun ControlPanel(
                 navController.popBackStack()
             } else {
                 navController.popBackStack()
-                navController.navigate(Routes.QuestionScreen.name + "/${nextTopicId}")
+                navController.navigate(Routes.QuestionScreen.name + "/${nextTopicId}/${ReviewQuestionProperty.None.name}")
             }
         }
     }

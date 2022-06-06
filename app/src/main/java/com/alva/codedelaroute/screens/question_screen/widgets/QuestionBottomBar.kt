@@ -29,6 +29,7 @@ import com.alva.codedelaroute.models.QuestionProgress
 import com.alva.codedelaroute.models.Topic
 import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.navigations.Routes
+import com.alva.codedelaroute.utils.ReviewQuestionProperty
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.view_models.TopicViewModel
 import kotlinx.coroutines.runBlocking
@@ -90,7 +91,7 @@ fun QuestionBottomBar(
                     Log.d("Hey", "Yup")
                     routeName = Routes.QuestionScreen.name
                     navController.popBackStack()
-                    navController.navigate("$routeName/$subTopicId")
+                    navController.navigate("$routeName/$subTopicId/${ReviewQuestionProperty.None.name}")
                 }
             }
         }, selected = false, icon = {

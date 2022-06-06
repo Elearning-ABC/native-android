@@ -127,7 +127,9 @@ fun ReviewListScreen(
                             Spacer(modifier = Modifier.size(50.dp))
                         }
                     }
-                    ReviewButton(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp))
+                    ReviewButton(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp)) {
+
+                    }
                 }
             }
         }

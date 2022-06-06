@@ -23,8 +23,7 @@ import com.alva.codedelaroute.models.Topic
 @Composable
 fun QuestionAppBar(
     navController: NavController,
-    mainTopic: Topic,
-    subTopic: Topic
+    appBarTitle: String
 ) {
     SmallTopAppBar(navigationIcon = {
         IconButton(onClick = {
@@ -34,7 +33,7 @@ fun QuestionAppBar(
         }
     }, title = {
         Text(
-            mainTopic.name + ": " + subTopic.name,
+            appBarTitle,
             fontWeight = FontWeight.SemiBold,
             fontSize = 18.sp,
             lineHeight = 24.sp

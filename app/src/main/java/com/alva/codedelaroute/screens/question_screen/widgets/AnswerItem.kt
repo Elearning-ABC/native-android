@@ -27,13 +27,12 @@ import com.alva.codedelaroute.models.Answer
 fun AnswerItem(
     answer: Answer,
     panelColorState: MutableState<Color> = mutableStateOf(Color.White),
-    borderAnswerColorState: MutableState<Color> = mutableStateOf(Color.Transparent),
+    borderAnswerColorState: Color = Color.Transparent,
     enabled: MutableState<Boolean> = mutableStateOf(true),
-    iconState: MutableState<Map<String, Any>> = mutableStateOf(
+    iconState: Map<String, Any> =
         mapOf(
             "icon" to Icons.Default.Remove, "tint" to Color(0xFF4D4D4D)
-        )
-    ),
+        ),
     explanation: String = "",
     onClick: () -> Unit = {}
 ) {
@@ -46,7 +45,7 @@ fun AnswerItem(
         },
         shape = RoundedCornerShape(corner = CornerSize(12.dp)),
         color = panelColorState.value,
-        border = BorderStroke(1.dp, color = borderAnswerColorState.value)
+        border = BorderStroke(1.dp, color = borderAnswerColorState)
     ) {
         Row(
             modifier = Modifier.padding(vertical = 16.dp, horizontal = 28.dp),
@@ -86,10 +85,10 @@ fun AnswerItem(
             }
             Spacer(modifier = Modifier.width(16.dp))
             Icon(
-                iconState.value["icon"] as ImageVector,
+                iconState["icon"] as ImageVector,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = iconState.value["tint"] as Color
+                tint = iconState["tint"] as Color
             )
         }
     }

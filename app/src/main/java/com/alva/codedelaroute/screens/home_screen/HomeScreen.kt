@@ -1,4 +1,4 @@
-package com.alva.codedelaroute.screens
+package com.alva.codedelaroute.screens.home_screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.Image

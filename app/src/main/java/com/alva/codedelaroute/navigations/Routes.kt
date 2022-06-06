@@ -1,7 +1,5 @@
 package com.alva.codedelaroute.navigations
 
-import com.alva.codedelaroute.screens.HomeScreen
-
 enum class Routes {
     HomeScreen,
     ChildTopicListScreen,

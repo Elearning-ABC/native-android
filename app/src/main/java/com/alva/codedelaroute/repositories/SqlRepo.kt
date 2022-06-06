@@ -54,13 +54,17 @@ object SqlRepo : Application() {
     }
 
     //TopicQuestion Queries
-    private fun getQuestionIdListByParentId(parentId: Long): MutableList<String> {
+    fun getQuestionIdListByParentId(parentId: Long): MutableList<String> {
         return topicQuestionRepo.getQuestionIdListByParentId(parentId)
     }
 
     //Question Queries
     fun getQuestionsByParentId(parentId: Long): MutableList<Question> {
         return questionRepo.getQuestionsByIdList(getQuestionIdListByParentId(parentId))
+    }
+
+    fun getQuestionsByIdList(idList: MutableList<String>): MutableList<Question> {
+        return questionRepo.getQuestionsByIdList(idList)
     }
 
     //QuestionProgress Queries

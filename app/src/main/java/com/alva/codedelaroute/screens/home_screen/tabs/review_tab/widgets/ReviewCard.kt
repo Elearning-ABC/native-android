@@ -40,6 +40,7 @@ fun ReviewCard(
         ReviewQuestionProperty.StrongQuestions -> R.drawable.ic_strong
         ReviewQuestionProperty.AllFamiliarQuestions -> R.drawable.ic_list
         ReviewQuestionProperty.YourFavoriteQuestions -> R.drawable.ic_favorites
+        else -> R.drawable.ic_weak
     }
 
     Card(

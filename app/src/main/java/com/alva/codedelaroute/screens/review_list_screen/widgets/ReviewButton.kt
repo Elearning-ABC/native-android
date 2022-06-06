@@ -1,6 +1,7 @@
 package com.alva.codedelaroute.screens.review_list_screen.widgets
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,8 +24,9 @@ import androidx.compose.ui.unit.sp
 
 @Preview
 @Composable
-fun ReviewButton(modifier: Modifier = Modifier) {
-    FilledTonalButton(modifier = modifier.shadow(10.dp, RoundedCornerShape(corner = CornerSize(12.dp))),
+fun ReviewButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    FilledTonalButton(modifier = modifier.shadow(10.dp, RoundedCornerShape(corner = CornerSize(12.dp)))
+        .clickable { onClick() },
         shape = RoundedCornerShape(corner = CornerSize(12.dp)),
         contentPadding = PaddingValues(),
         onClick = { }) {

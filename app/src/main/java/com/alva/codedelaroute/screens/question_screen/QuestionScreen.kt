@@ -38,6 +38,7 @@ import com.alva.codedelaroute.screens.question_screen.widgets.QuestionAppBar
 import com.alva.codedelaroute.screens.question_screen.widgets.QuestionBottomBar
 import com.alva.codedelaroute.screens.question_screen.widgets.QuestionProgressBar
 import com.alva.codedelaroute.utils.AnswerStatus
+import com.alva.codedelaroute.utils.ReviewQuestionProperty
 import com.alva.codedelaroute.view_models.AnswerViewModel
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.view_models.TopicViewModel
@@ -50,6 +51,7 @@ import java.io.IOException
 fun QuestionScreen(
     navController: NavController = rememberNavController(),
     subTopicId: String,
+    reviewQuestionProperty: ReviewQuestionProperty,
     questionViewModel: QuestionViewModel = viewModel(
         viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner, key = QuestionViewModel.key
     ),
@@ -76,8 +78,24 @@ fun QuestionScreen(
 
     val coroutine = rememberCoroutineScope()
 
+    val enabled = remember {
+        mutableStateOf(
+            !questionViewModel.isFinishQuestion(
+                currentQuestion, currentQuestionProgress = questionProgress
+            )
+        )
+    }
+
     val checkFinishedQuestion =
         remember { mutableStateOf(questionViewModel.isFinishQuestion(currentQuestion, questionProgress)) }
+
+    val answerStatus = remember {
+        mutableStateOf(
+            questionViewModel.getAnswerStatus(
+                question = currentQuestion, currentQuestionProgress = questionProgress
+            )
+        )
+    }
 
     ProvideWindowInsets {
         Surface(modifier = Modifier.systemBarsPadding(true).fillMaxSize()) {
@@ -87,7 +105,7 @@ fun QuestionScreen(
                 contentScale = ContentScale.Crop
             )
             Scaffold(topBar = {
-                QuestionAppBar(navController, mainTopic, subTopic)
+                QuestionAppBar(navController, appBarTitle = mainTopic.name + ": " + subTopic.name)
             }, backgroundColor = Color.Transparent, contentColor = Color.Transparent, bottomBar = {
                 QuestionBottomBar(
                     navController = navController,
@@ -106,51 +124,22 @@ fun QuestionScreen(
                     Box(
                         modifier = Modifier.weight(1f),
                     ) {
-                        val answerStatus = remember {
-                            mutableStateOf(
-                                questionViewModel.getAnswerStatus(
-                                    question = currentQuestion, currentQuestionProgress = questionProgress
-                                )
-                            )
-                        }
-
-                        val enabled = remember {
-                            mutableStateOf(
-                                !questionViewModel.isFinishQuestion(
-                                    currentQuestion, currentQuestionProgress = questionProgress
-                                )
-                            )
-                        }
-
                         Column(modifier = Modifier.fillMaxSize()) {
                             QuestionContainer(currentQuestion, answerStatus)
                             Spacer(modifier = Modifier.height(20.dp))
-                            Crossfade(
-                                targetState = enabled, animationSpec = tween(
-                                    durationMillis = 300, delayMillis = 0, easing = LinearOutSlowInEasing
-                                )
-                            ) {
-                                if (it.value) {
-                                    AnswerPanel(
-                                        currentQuestion,
-                                        questionViewModel,
-                                        questionProgress,
-                                        enabled,
-                                        answerViewModel,
-                                        coroutine,
-                                        answerStatus,
-                                        checkFinishedQuestion,
-                                        subTopicProgress,
-                                        mainTopicProgress
-                                    )
-                                } else FinishedAnswerPanel(
-                                    currentQuestion,
-                                    questionViewModel,
-                                    questionProgress,
-                                    enabled,
-                                    currentQuestion.explanation
-                                )
-                            }
+                            AnswerPanel(
+                                currentQuestion,
+                                questionViewModel,
+                                questionProgress,
+                                enabled,
+                                answerViewModel,
+                                coroutine,
+                                answerStatus,
+                                checkFinishedQuestion,
+                                subTopicProgress,
+                                mainTopicProgress,
+                                currentQuestion.explanation
+                            )
                         }
                     }
                 }
@@ -171,103 +160,67 @@ fun AnswerPanel(
     checkFinishedQuestion: MutableState<Boolean>,
     subTopicProgress: TopicProgress,
     mainTopicProgress: TopicProgress,
-) {
-    LazyColumn {
-        items(items = question.choices, key = { item: Answer -> item.id }) {
-            val panelColorState = remember { mutableStateOf(Color.White) }
-
-            AnswerItem(
-                it,
-                panelColorState = panelColorState,
-                enabled = enabled,
-            ) {
-                answerViewModel.onAnswerClickHandler(
-                    answer = it,
-                    question = question,
-                    questionProgress = questionProgress,
-                    questionViewModel = questionViewModel,
-                    panelColorState = panelColorState,
-                    enabled = enabled,
-                    coroutine = coroutine,
-                    answerStatus = answerStatus,
-                    checkFinishedQuestion = checkFinishedQuestion,
-                    subTopicProgress = subTopicProgress,
-                    mainTopicProgress = mainTopicProgress
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun FinishedAnswerPanel(
-    question: Question,
-    questionViewModel: QuestionViewModel,
-    questionProgress: QuestionProgress,
-    enabled: MutableState<Boolean>,
     explanation: String
 ) {
     LazyColumn {
+
         items(items = question.choices, key = { item: Answer -> item.id }) {
-            val borderAnswerColorState = remember {
-                mutableStateOf(
-                    if (!questionViewModel.isFinishQuestion(
-                            question, currentQuestionProgress = questionProgress
-                        )
-                    ) {
-                        Color.Transparent
-                    } else {
-                        if (it.isCorrect) Color(0xFF00C17C)
-                        else Color(227, 30, 24).copy(alpha = 0.52f)
-                    }
-                )
-            }
-            val iconState = remember {
-                mutableStateOf(
-                    if (!questionViewModel.isFinishQuestion(
-                            question, currentQuestionProgress = questionProgress
-                        )
-                    ) {
-                        mapOf(
-                            "icon" to Icons.Default.Remove, "tint" to Color(0xFF4D4D4D)
-                        )
-                    } else {
-                        if (it.isCorrect) mapOf(
-                            "icon" to Icons.Default.Check, "tint" to Color(0xFF00C17C)
 
-                        )
-                        else mapOf(
-                            "icon" to Icons.Default.Close, "tint" to Color(227, 30, 24).copy(alpha = 0.52f)
-                        )
+            val visibilityState = if (!enabled.value) {
+                it.isCorrect || questionProgress.choiceSelectedIds.contains(it.id)
+            } else true
 
-                    }
-                )
+            val panelColorState = remember { mutableStateOf(Color.White) }
+
+            val borderAnswerColorState = if (enabled.value) {
+                Color.Transparent
+            } else {
+                if (it.isCorrect) Color(0xFF00C17C)
+                else Color(227, 30, 24).copy(alpha = 0.52f)
             }
 
-            val visibilityState = remember {
-                mutableStateOf(
-                    if (!questionViewModel.isFinishQuestion(
-                            question, currentQuestionProgress = questionProgress
-                        )
-                    ) true
-                    else {
-                        !(!questionViewModel.checkClickedAnswerList(
-                            it.id, questionProgress
-                        ) && !it.isCorrect)
-                    }
+            val iconState = if (enabled.value
+            ) {
+                mapOf(
+                    "icon" to Icons.Default.Remove, "tint" to Color(0xFF4D4D4D)
                 )
+            } else {
+                if (it.isCorrect) mapOf(
+                    "icon" to Icons.Default.Check, "tint" to Color(0xFF00C17C)
+
+                )
+                else mapOf(
+                    "icon" to Icons.Default.Close, "tint" to Color(227, 30, 24).copy(alpha = 0.52f)
+                )
+
             }
+
 
             AnimatedVisibility(
-                visible = visibilityState.value, enter = scaleIn()
+                visible = visibilityState, enter = scaleIn()
             ) {
                 AnswerItem(
                     it,
                     borderAnswerColorState = borderAnswerColorState,
+                    panelColorState = panelColorState,
                     enabled = enabled,
                     iconState = iconState,
                     explanation = explanation
-                )
+                ) {
+                    answerViewModel.onAnswerClickHandler(
+                        answer = it,
+                        question = question,
+                        questionProgress = questionProgress,
+                        questionViewModel = questionViewModel,
+                        panelColorState = panelColorState,
+                        enabled = enabled,
+                        coroutine = coroutine,
+                        answerStatus = answerStatus,
+                        checkFinishedQuestion = checkFinishedQuestion,
+                        subTopicProgress = subTopicProgress,
+                        mainTopicProgress = mainTopicProgress,
+                    )
+                }
             }
         }
     }
@@ -337,7 +290,7 @@ fun QuestionContainer(question: Question, answerStatus: MutableState<AnswerStatu
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
+                    verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(question.text, modifier = Modifier.weight(1f), fontSize = 18.sp)
                     Spacer(modifier = Modifier.width(16.dp))

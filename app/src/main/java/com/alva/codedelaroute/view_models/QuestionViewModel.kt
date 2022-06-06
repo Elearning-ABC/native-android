@@ -30,6 +30,14 @@ class QuestionViewModel : ViewModel() {
         SqlRepo.addOrUpdateQuestionProgressToRepo(questionProgress)
     }
 
+    fun getQuestionIdListByParentId(parentId: Long): MutableList<String> {
+        return SqlRepo.getQuestionIdListByParentId(parentId)
+    }
+
+    fun getQuestionsByIdList(idList: MutableList<String>): MutableList<Question> {
+        return SqlRepo.getQuestionsByIdList(idList)
+    }
+
     fun goToNextQuestion(
         questionList: MutableList<Question>, parentId: Long
     ): Question {
@@ -46,17 +54,6 @@ class QuestionViewModel : ViewModel() {
         if (tmpList.size > 0) {
             return tmpList.first()
         }
-//        else if (questionProgressList.any { questionProgress ->
-//                questionProgress.choiceSelectedIds.size < questionList.first { it.id == questionProgress.questionId }.correctAnswers.size
-//            }) {
-//            return questionList.first { question ->
-//                question.id == (questionProgressList.first {
-//                    questionProgressList.any { questionProgress ->
-//                        questionProgress.choiceSelectedIds.size < questionList.first { it.id == questionProgress.questionId }.correctAnswers.size
-//                    }
-//                }).id
-//            }
-//        }
         else {
             questionProgressList.sortBy { it.lastUpdate }
             val previousQuestionProgress = questionProgressList.last()
@@ -91,17 +88,20 @@ class QuestionViewModel : ViewModel() {
         mainTopicProgress: TopicProgress
     ) {
         val tmp = QuestionProgress()
+        tmp.apply {
+            lastUpdate = currentQuestionProgress.lastUpdate
+            choiceSelectedIds = currentQuestionProgress.choiceSelectedIds
+            boxNum = currentQuestionProgress.boxNum
+            topicId = currentQuestionProgress.topicId
+            questionId = currentQuestionProgress.questionId
+            id = currentQuestionProgress.id
+            bookmark = currentQuestionProgress.bookmark
+            round = currentQuestionProgress.round
+            stateId = currentQuestionProgress.stateId
+            times = currentQuestionProgress.times
+        }
         val progressList = currentQuestionProgress.progress.toMutableList()
-        tmp.lastUpdate = currentQuestionProgress.lastUpdate
-        tmp.choiceSelectedIds = currentQuestionProgress.choiceSelectedIds
-        tmp.boxNum = currentQuestionProgress.boxNum
-        tmp.topicId = currentQuestionProgress.topicId
-        tmp.questionId = currentQuestionProgress.questionId
-        tmp.id = currentQuestionProgress.id
-        tmp.bookmark = currentQuestionProgress.bookmark
-        tmp.round = currentQuestionProgress.round
-        tmp.stateId = currentQuestionProgress.stateId
-        tmp.times = currentQuestionProgress.times
+
 
         if (!tmp.choiceSelectedIds.contains(answerId)) {
             tmp.choiceSelectedIds.add(answerId)

@@ -13,5 +13,6 @@ enum class ReviewQuestionProperty {
     MediumQuestions,
     StrongQuestions,
     AllFamiliarQuestions,
-    YourFavoriteQuestions
+    YourFavoriteQuestions,
+    None
 }

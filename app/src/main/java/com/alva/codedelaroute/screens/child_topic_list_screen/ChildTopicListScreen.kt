@@ -29,6 +29,7 @@ import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.navigations.Routes
 import com.alva.codedelaroute.screens.child_topic_list_screen.widgets.ChildTopicCard
 import com.alva.codedelaroute.screens.child_topic_list_screen.widgets.ChildTopicListAppBar
+import com.alva.codedelaroute.utils.ReviewQuestionProperty
 import com.alva.codedelaroute.widgets.CustomAlertDialog
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.view_models.TopicViewModel
@@ -95,7 +96,7 @@ fun ChildTopicListScreen(
                         questionViewModel.clearQuestionProgressData(
                             subTopicIdCallback.value.toLong()
                         )
-                        navController.navigate(Routes.QuestionScreen.name + "/${subTopicIdCallback.value}")
+                        navController.navigate(Routes.QuestionScreen.name + "/${subTopicIdCallback.value}/${ReviewQuestionProperty.None.name}")
                     }
                     openDialog.value = false
                 },
@@ -128,7 +129,7 @@ fun ChildTopicList(
                             subTopics[it].id
                         )
                     ) {
-                        navController.navigate(Routes.QuestionScreen.name + "/${subTopics[it].id}")
+                        navController.navigate(Routes.QuestionScreen.name + "/${subTopics[it].id}/${ReviewQuestionProperty.None.name}")
                     } else {
                         subTopicIdCallback.value = subTopics[it].id
                         Log.d("Hey", subTopicIdCallback.value)
