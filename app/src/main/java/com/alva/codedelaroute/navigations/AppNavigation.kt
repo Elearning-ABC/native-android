@@ -10,13 +10,16 @@ import androidx.navigation.navArgument
 import com.alva.codedelaroute.models.Topic
 import com.alva.codedelaroute.screens.child_topic_list_screen.ChildTopicListScreen
 import com.alva.codedelaroute.screens.HomeScreen
+import com.alva.codedelaroute.screens.finish_topic_screen.FinishTopicScreen
 import com.alva.codedelaroute.screens.question_screen.QuestionScreen
+import com.alva.codedelaroute.screens.review_list_screen.ReviewListScreen
+import com.alva.codedelaroute.utils.ReviewQuestionProperty
 import com.alva.codedelaroute.utils.fromJson
 import com.google.gson.Gson
 
 @Composable
 fun AppNavigation() {
-    var navController = rememberNavController()
+    val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Routes.HomeScreen.name) {
         composable(
             Routes.HomeScreen.name
@@ -35,6 +38,23 @@ fun AppNavigation() {
         })) { backStackEntry ->
             backStackEntry.arguments?.getString("subTopicId")?.let {
                 QuestionScreen(navController, subTopicId = it)
+            }
+        }
+        composable(Routes.FinishTopicScreen.name + "/{subTopicId}", arguments = listOf(navArgument("subTopicId") {
+            type = NavType.StringType
+        })) { backStackEntry ->
+            backStackEntry.arguments?.getString("subTopicId")?.let {
+                FinishTopicScreen(navController, subTopicId = it)
+            }
+        }
+        composable(
+            Routes.ReviewListScreen.name + "/{reviewQuestionProperty}",
+            arguments = listOf(navArgument("reviewQuestionProperty") {
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
+            backStackEntry.arguments?.getString("reviewQuestionProperty")?.let {
+                ReviewListScreen(navController, ReviewQuestionProperty.valueOf(it))
             }
         }
     }

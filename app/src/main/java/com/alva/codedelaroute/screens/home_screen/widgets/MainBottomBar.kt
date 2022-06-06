@@ -29,12 +29,12 @@ fun MainBottomBar(
     navController: NavController, selectedItemState: PagerState
 ) {
     val coroutineScope = rememberCoroutineScope()
-    var navigationBarItemDefaultColors = NavigationBarItemDefaults.colors(
-        indicatorColor = Color(226, 228, 238),
+    val navigationBarItemDefaultColors = NavigationBarItemDefaults.colors(
+        indicatorColor = Color(0xFFF7F7F7),
     )
 
     NavigationBar(
-        containerColor = Color.White,
+        containerColor = Color(0xFFF7F7F7),
         contentColor = Color(0xff002395),
         tonalElevation = 10.dp,
     ) {
@@ -47,7 +47,11 @@ fun MainBottomBar(
                 painterResource(R.drawable.practice_icon),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(Color(0xFF002395)),
+                colorFilter = ColorFilter.tint(
+                    if (selectedItemState.currentPage == 0) Color(0xFF002395) else Color(
+                        0xFFABB1DB
+                    )
+                ),
             )
         }, selected = selectedItemState.currentPage == 0, alwaysShowLabel = false, enabled = true,/* label = {
             Text(
@@ -68,7 +72,11 @@ fun MainBottomBar(
                 painterResource(R.drawable.test_icon),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(Color(0xFF002395))
+                colorFilter = ColorFilter.tint(
+                    if (selectedItemState.currentPage == 1) Color(0xFF002395) else Color(
+                        0xFFABB1DB
+                    )
+                ),
             )
         }, selected = selectedItemState.currentPage == 1, alwaysShowLabel = false, enabled = true,/* label = {
             Text(
@@ -89,7 +97,11 @@ fun MainBottomBar(
                 painterResource(R.drawable.review_icon),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(Color(0xFF002395))
+                colorFilter = ColorFilter.tint(
+                    if (selectedItemState.currentPage == 2) Color(0xFF002395) else Color(
+                        0xFFABB1DB
+                    )
+                ),
             )
         }, selected = selectedItemState.currentPage == 2, alwaysShowLabel = false, enabled = true,/* label = {
             Text(

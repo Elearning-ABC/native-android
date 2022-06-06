@@ -21,10 +21,10 @@ fun ChildTopicCard(topic: Topic, modifier: Modifier = Modifier, subTopicProgress
     Surface(
         modifier = modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp).fillMaxWidth(),
         shape = RoundedCornerShape(corner = CornerSize(8.dp)),
-        color = Color.White.copy(alpha = 0.8f),
-        elevation = 0.dp,
+        color = Color.White,
+        elevation = 10.dp,
     ) {
-        var percentage = subTopicProgress.correctNumber.toFloat() / subTopicProgress.totalQuestionNumber
+        val percentage = subTopicProgress.correctNumber.toFloat() / subTopicProgress.totalQuestionNumber
 
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
@@ -41,7 +41,7 @@ fun ChildTopicCard(topic: Topic, modifier: Modifier = Modifier, subTopicProgress
                 CustomProgressBar(
                     Modifier.height(8.dp).clip(shape = RoundedCornerShape(4.dp)),
                     Color(0xFFCAD1F5),
-                    Color(0xFF2B5AF5),
+                    Color(0xFF002395),
                     percentage,
                 )
             }

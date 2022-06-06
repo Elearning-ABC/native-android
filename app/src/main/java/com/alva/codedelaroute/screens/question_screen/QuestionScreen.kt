@@ -1,17 +1,11 @@
-@file:OptIn(ExperimentalPagerApi::class, ExperimentalAnimationApi::class)
+@file:OptIn(ExperimentalAnimationApi::class)
 
 package com.alva.codedelaroute.screens.question_screen
 
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.FlingBehavior
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.ScrollableState
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,11 +13,9 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,19 +24,15 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.alva.codedelaroute.R
 import com.alva.codedelaroute.models.*
-import com.alva.codedelaroute.navigations.Routes
 import com.alva.codedelaroute.screens.question_screen.widgets.AnswerItem
 import com.alva.codedelaroute.screens.question_screen.widgets.QuestionAppBar
 import com.alva.codedelaroute.screens.question_screen.widgets.QuestionBottomBar
@@ -55,10 +43,7 @@ import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.view_models.TopicViewModel
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.systemBarsPadding
-import com.google.accompanist.pager.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import okhttp3.internal.wait
 import java.io.IOException
 
 @Composable
@@ -82,12 +67,12 @@ fun QuestionScreen(
     val currentQuestion = questionViewModel.goToNextQuestion(questions, subTopicId.toLong())
 
     val questionProgress = questionViewModel.getQuestionProgressByQuestionId(
-        currentQuestion!!.id.toLong(), subTopicId.toLong()
+        currentQuestion.id.toLong(), subTopicId.toLong()
     )
 
-    var subTopicProgress = topicViewModel.getTopicProgressByTopicId(subTopicId.toLong())
+    val subTopicProgress = topicViewModel.getTopicProgressByTopicId(subTopicId.toLong())
 
-    var mainTopicProgress = topicViewModel.getTopicProgressByTopicId(mainTopic.id.toLong())
+    val mainTopicProgress = topicViewModel.getTopicProgressByTopicId(mainTopic.id.toLong())
 
     val coroutine = rememberCoroutineScope()
 
@@ -110,7 +95,6 @@ fun QuestionScreen(
                     question = currentQuestion,
                     questionProgress = questionProgress,
                     subTopicId = subTopicId,
-                    questionList = questions
                 )
             }) { innerPadding ->
                 Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
@@ -122,16 +106,13 @@ fun QuestionScreen(
                     Box(
                         modifier = Modifier.weight(1f),
                     ) {
-
                         val answerStatus = remember {
                             mutableStateOf(
                                 questionViewModel.getAnswerStatus(
-                                    question = currentQuestion,
-                                    currentQuestionProgress = questionProgress
+                                    question = currentQuestion, currentQuestionProgress = questionProgress
                                 )
                             )
                         }
-
 
                         val enabled = remember {
                             mutableStateOf(
@@ -163,7 +144,11 @@ fun QuestionScreen(
                                         mainTopicProgress
                                     )
                                 } else FinishedAnswerPanel(
-                                    currentQuestion, questionViewModel, questionProgress, enabled
+                                    currentQuestion,
+                                    questionViewModel,
+                                    questionProgress,
+                                    enabled,
+                                    currentQuestion.explanation
                                 )
                             }
                         }
@@ -185,7 +170,7 @@ fun AnswerPanel(
     answerStatus: MutableState<AnswerStatus>,
     checkFinishedQuestion: MutableState<Boolean>,
     subTopicProgress: TopicProgress,
-    mainTopicProgress: TopicProgress
+    mainTopicProgress: TopicProgress,
 ) {
     LazyColumn {
         items(items = question.choices, key = { item: Answer -> item.id }) {
@@ -220,6 +205,7 @@ fun FinishedAnswerPanel(
     questionViewModel: QuestionViewModel,
     questionProgress: QuestionProgress,
     enabled: MutableState<Boolean>,
+    explanation: String
 ) {
     LazyColumn {
         items(items = question.choices, key = { item: Answer -> item.id }) {
@@ -276,7 +262,11 @@ fun FinishedAnswerPanel(
                 visible = visibilityState.value, enter = scaleIn()
             ) {
                 AnswerItem(
-                    it, borderAnswerColorState = borderAnswerColorState, enabled = enabled, iconState = iconState
+                    it,
+                    borderAnswerColorState = borderAnswerColorState,
+                    enabled = enabled,
+                    iconState = iconState,
+                    explanation = explanation
                 )
             }
         }
@@ -313,7 +303,7 @@ fun QuestionContainer(question: Question, answerStatus: MutableState<AnswerStatu
     }
 
     val remindingText = when (answerStatus.value) {
-        AnswerStatus.None -> ""
+        AnswerStatus.None -> null
         AnswerStatus.True -> "You will not see this question in a while"
         AnswerStatus.False -> "You will see this question soon"
         AnswerStatus.TryAgainWithTrue -> "You got this question last time"
@@ -364,13 +354,15 @@ fun QuestionContainer(question: Question, answerStatus: MutableState<AnswerStatu
                         modifier = Modifier.size(24.dp),
                         tint = textColor
                     )
-                    Text(
-                        remindingText,
-                        color = textColor,
-                        fontSize = 16.sp,
-                        lineHeight = 22.sp,
-                        modifier = Modifier.padding(start = 10.dp)
-                    )
+                    if (answerStatus.value != AnswerStatus.None) {
+                        Text(
+                            remindingText!!,
+                            color = textColor,
+                            fontSize = 16.sp,
+                            lineHeight = 22.sp,
+                            modifier = Modifier.padding(start = 10.dp)
+                        )
+                    }
                 }
             }
         }

@@ -1,7 +1,5 @@
 package com.alva.codedelaroute.view_models
 
-import android.util.Log
-import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
@@ -14,6 +12,7 @@ import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.utils.AnswerStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class AnswerViewModel : ViewModel() {
     companion object {
@@ -35,7 +34,7 @@ class AnswerViewModel : ViewModel() {
         mainTopicProgress: TopicProgress
     ) {
         coroutine.launch {
-            questionViewModel.onAnswerClick(
+            questionViewModel.onQuestionAnswerClick(
                 answer.id, questionProgress, question, subTopicProgress, mainTopicProgress
             )
             checkFinishedQuestion.value = questionViewModel.isFinishQuestion(

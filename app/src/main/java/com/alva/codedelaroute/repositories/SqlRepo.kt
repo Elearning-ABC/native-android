@@ -8,12 +8,12 @@ import io.realm.Realm
 import io.realm.RealmConfiguration
 
 object SqlRepo : Application() {
-    private var realm: Realm
-    private var topicRepo: TopicRepo
-    private var questionRepo: QuestionRepo
-    private var topicQuestionRepo: TopicQuestionRepo
-    private var questionProgressRepo: QuestionProgressRepo
-    private var topicProgressRepo: TopicProgressRepo
+    private val realm: Realm
+    private val topicRepo: TopicRepo
+    private val questionRepo: QuestionRepo
+    private val topicQuestionRepo: TopicQuestionRepo
+    private val questionProgressRepo: QuestionProgressRepo
+    private val topicProgressRepo: TopicProgressRepo
 
     init {
         val configuration = RealmConfiguration.Builder(
@@ -54,7 +54,7 @@ object SqlRepo : Application() {
     }
 
     //TopicQuestion Queries
-    fun getQuestionIdListByParentId(parentId: Long): MutableList<String> {
+    private fun getQuestionIdListByParentId(parentId: Long): MutableList<String> {
         return topicQuestionRepo.getQuestionIdListByParentId(parentId)
     }
 
@@ -76,6 +76,26 @@ object SqlRepo : Application() {
         questionProgressRepo.addOrUpdateQuestionProgressToRepo(questionProgress)
     }
 
+    suspend fun clearQuestionProgressData(subTopicId: Long) {
+        questionProgressRepo.clearQuestionProgressData(subTopicId)
+    }
+
+    fun getAllAnsweredQuestions(): MutableList<Question> {
+        return questionProgressRepo.getAllAnsweredQuestions()
+    }
+
+    fun getAllQuestionProgress(): MutableList<QuestionProgress> {
+        return questionProgressRepo.getAllQuestionProgress()
+    }
+
+    fun getAnsweredQuestionsByQuestionProgressList(questionProgressList: MutableList<QuestionProgress>): MutableList<Question> {
+        return questionProgressRepo.getAnsweredQuestionsByQuestionProgressList(questionProgressList)
+    }
+
+    fun getProgressByQuestionId(questionId: Long): MutableList<Int> {
+        return questionProgressRepo.getProgressByQuestionId(questionId)
+    }
+
     //TopicProgress Queries
     fun getTopicProgressByTopicId(topicId: Long): TopicProgress {
         return topicProgressRepo.getTopicProgressByTopicId(topicId)
@@ -83,5 +103,9 @@ object SqlRepo : Application() {
 
     suspend fun addOrUpdateTopicProgressToRepo(topicProgress: TopicProgress) {
         topicProgressRepo.addOrUpdateTopicProgressToRepo(topicProgress)
+    }
+
+    suspend fun clearSubTopicProgressData(subTopicId: Long, parentTopicId: Long) {
+        topicProgressRepo.clearSubTopicProgressData(subTopicId, parentTopicId)
     }
 }

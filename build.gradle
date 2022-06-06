@@ -14,7 +14,7 @@ buildscript {
 }
 
 plugins {
-    id 'io.realm.kotlin' version '0.10.0' apply false
+    id 'io.realm.kotlin' version '0.11.1' apply false
 }
 
 task clean(type: Delete) {

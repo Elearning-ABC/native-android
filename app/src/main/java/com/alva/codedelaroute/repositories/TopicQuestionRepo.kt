@@ -5,7 +5,7 @@ import io.realm.Realm
 
 class TopicQuestionRepo(val realm: Realm) {
     fun getQuestionIdListByParentId(parentId: Long): MutableList<String> {
-        var result = realm.query(TopicQuestion::class).query("parentId = '${parentId}'").find()
+        val result = realm.query(TopicQuestion::class, "parentId = '${parentId}'").find()
         return result.map {
             it.questionId
         }.toMutableList()

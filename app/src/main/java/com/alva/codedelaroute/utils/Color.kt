@@ -1,4 +1,4 @@
-package com.alva.codedelaroute.ui.theme
+package com.alva.codedelaroute.utils
 
 import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.NavigationBarItemDefaults

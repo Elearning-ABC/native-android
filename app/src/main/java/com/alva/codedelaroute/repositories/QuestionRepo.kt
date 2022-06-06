@@ -10,7 +10,7 @@ class QuestionRepo(val realm: Realm) {
     fun getQuestionsByIdList(idList: MutableList<String>): MutableList<Question> {
         val results = mutableListOf<Question>()
         idList.forEach {
-            val temp = realm.query(Question::class).query("id = '$it'").first().find()
+            val temp = realm.query(Question::class, "id = '$it'").first().find()
             if (temp != null) results.add(temp)
         }
         return results

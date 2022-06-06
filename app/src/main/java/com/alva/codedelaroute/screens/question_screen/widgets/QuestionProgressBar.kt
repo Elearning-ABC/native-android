@@ -44,14 +44,14 @@ fun QuestionProgressBar(
             LaunchedEffect(checkFinishedQuestion.value) {
                 trueIndicatorProgress.animateTo(
                     questionViewModel.getTrueQuestionsPercent(subTopicId.toLong()),
-                    animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing)
+                    animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing)
                 )
             }
             LaunchedEffect(checkFinishedQuestion.value) {
                 falseIndicatorProgress.animateTo(
                     questionViewModel.getTrueQuestionsPercent(subTopicId.toLong()) + questionViewModel.getFalseQuestionsPercent(
                         subTopicId.toLong()
-                    ), animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing)
+                    ), animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing)
                 )
             }
         } /*else {

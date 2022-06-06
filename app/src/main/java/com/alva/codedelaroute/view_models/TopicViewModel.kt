@@ -3,6 +3,7 @@ package com.alva.codedelaroute.view_models
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
+import com.alva.codedelaroute.models.Question
 import com.alva.codedelaroute.models.QuestionProgress
 import com.alva.codedelaroute.models.Topic
 import com.alva.codedelaroute.models.TopicProgress
@@ -21,7 +22,7 @@ class TopicViewModel : ViewModel() {
     }
 
     fun getSubTopic(parentId: Long): MutableList<Topic> {
-        var lists = SqlRepo.getTopicsByParentId(parentId)
+        val lists = SqlRepo.getTopicsByParentId(parentId)
         lists.sortBy { it.orderIndex }
         return lists
     }
@@ -38,5 +39,42 @@ class TopicViewModel : ViewModel() {
         topicProgress: TopicProgress,
     ) {
         SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress)
+    }
+
+    fun checkFinishedTopic(topicId: String): Boolean {
+        val topicProgress = getTopicProgressByTopicId(topicId = topicId.toLong())
+        if (topicProgress.correctNumber == topicProgress.totalQuestionNumber) return true
+        return false
+    }
+
+    suspend fun clearSubTopicProgressData(subTopicId: Long, parentTopicId: Long) {
+        SqlRepo.clearSubTopicProgressData(subTopicId, parentTopicId)
+    }
+
+    fun getNextTopicId(currentTopic: Topic): String? {
+        var result: String? = null
+        val firstResults = getSubTopic(currentTopic.parentId.toLong()).sortedBy { it.orderIndex }
+        if (firstResults.last().orderIndex > currentTopic.orderIndex) {
+            var tmpOrderIndex = currentTopic.orderIndex + 1
+            while (tmpOrderIndex <= firstResults.last().orderIndex) {
+                val tmpResult = firstResults.first { it.orderIndex == tmpOrderIndex }
+                if (!checkFinishedTopic(tmpResult.id)) {
+                    result = tmpResult.id
+                    break
+                } else tmpOrderIndex++
+            }
+            //result = firstResults.first { it.orderIndex == (currentTopic.orderIndex + 1) }.id
+        }
+        return result
+
+//        else {
+//            return null
+//            val secondResults = SqlRepo.getTopicsByParentId(5681717746597888).sortedBy { it.orderIndex }
+//            val currentParentTopic = getTopicById(currentTopic.parentId.toLong())
+//            if(secondResults.last().orderIndex > currentParentTopic.orderIndex) {
+//                val parentTopicResultId = secondResults.filter { it.orderIndex == (currentParentTopic.orderIndex + 1) }[0].parentId
+//                SqlRepo.getTopicsByParentId(parentTopicResultId.toLong()).sortedBy { it.orderIndex }[0].id
+//            } else null
+//        }
     }
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.Image
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -15,8 +16,10 @@ import androidx.navigation.compose.rememberNavController
 
 import com.alva.codedelaroute.R
 import com.alva.codedelaroute.screens.practice_screen.widgets.StartButton
-import com.alva.codedelaroute.screens.practice_screen.PracticeScreen
-import com.alva.codedelaroute.widgets.CommonAppBar
+import com.alva.codedelaroute.screens.home_screen.tabs.practice_tab.PracticeTab
+import com.alva.codedelaroute.screens.home_screen.tabs.review_tab.ReviewTab
+import com.alva.codedelaroute.screens.home_screen.tabs.test_tab.TestTab
+import com.alva.codedelaroute.screens.home_screen.widgets.CommonAppBar
 import com.alva.codedelaroute.widgets.MainBottomBar
 import com.alva.codedelaroute.widgets.ProgressPanel
 import com.google.accompanist.insets.ProvideWindowInsets
@@ -52,9 +55,13 @@ fun HomeScreen(
                 Column(modifier = Modifier.padding(innerPadding).fillMaxHeight()) {
                     ProgressPanel()
                     StartButton(Modifier.padding(horizontal = 47.dp, vertical = 16.dp))
-                    Box(modifier = Modifier.weight(1f)){
-                        HorizontalPager(count = 3, state = pagerState) { index ->
-                            PracticeScreen(navController)
+                    Box(modifier = Modifier.weight(1f)) {
+                        HorizontalPager(count = 3, state = pagerState, verticalAlignment = Alignment.Top) { index ->
+                            when (index) {
+                                0 -> PracticeTab(navController)
+                                1 -> TestTab(navController)
+                                2 -> ReviewTab(navController)
+                            }
                         }
                     }
                 }

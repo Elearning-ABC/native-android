@@ -11,9 +11,9 @@ import kotlin.random.Random
 class TopicProgressRepo(val realm: Realm) {
     fun getTopicProgressByTopicId(topicId: Long): TopicProgress {
         val topic = SqlRepo.getTopicById(topicId)
-        val result = realm.query(TopicProgress::class).query("topicId = '$topicId'").find()
+        val result = realm.query(TopicProgress::class, "topicId = '$topicId'").find()
         return if (result.isEmpty()) {
-            var topicProgress = TopicProgress()
+            val topicProgress = TopicProgress()
             topicProgress.id = (System.currentTimeMillis() + (0..10000).random()).toString()
             topicProgress.topicId = topicId.toString()
             topicProgress.lastUpdate = System.currentTimeMillis().toDouble()
@@ -27,7 +27,7 @@ class TopicProgressRepo(val realm: Realm) {
     suspend fun addOrUpdateTopicProgressToRepo(topicProgress: TopicProgress) {
         realm.write {
             val result =
-                this.query(TopicProgress::class).query("topicId = '${topicProgress.topicId}'").first()
+                this.query(TopicProgress::class, "topicId = '${topicProgress.topicId}'").first()
                     .find()
 
             if (result == null) {
@@ -43,6 +43,33 @@ class TopicProgressRepo(val realm: Realm) {
                 this.delete(result)
                 this.copyToRealm(tmp)
             }
+        }
+    }
+
+    suspend fun clearSubTopicProgressData(subTopicId: Long, parentTopicId: Long) {
+        realm.write {
+            val subTopicProgress = this.query(TopicProgress::class, "topicId = '$subTopicId'").first().find()!!
+            val parenTopicProgress =
+                this.query(TopicProgress::class, "topicId = '$parentTopicId'").first().find()!!
+
+            val parentTopicProgressTemp = TopicProgress()
+            parentTopicProgressTemp.topicId = parenTopicProgress.topicId
+            parentTopicProgressTemp.id = parenTopicProgress.id
+            parentTopicProgressTemp.correctNumber = (parenTopicProgress.correctNumber - subTopicProgress.correctNumber)
+            parentTopicProgressTemp.totalQuestionNumber = parenTopicProgress.totalQuestionNumber
+            parentTopicProgressTemp.lastUpdate = System.currentTimeMillis().toDouble()
+
+            val subTopicProgressTemp = TopicProgress()
+            subTopicProgressTemp.topicId = subTopicProgress.topicId
+            subTopicProgressTemp.id = subTopicProgress.id
+            subTopicProgressTemp.correctNumber = 0
+            subTopicProgressTemp.totalQuestionNumber = subTopicProgress.totalQuestionNumber
+            subTopicProgressTemp.lastUpdate = System.currentTimeMillis().toDouble()
+
+            subTopicProgress.also { this.delete(findLatest(subTopicProgress)!!) }
+            parenTopicProgress.also { this.delete(findLatest(parenTopicProgress)!!) }
+            this.copyToRealm(parentTopicProgressTemp)
+            this.copyToRealm(subTopicProgressTemp)
         }
     }
 }

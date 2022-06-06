@@ -7,3 +7,11 @@ enum class AnswerStatus {
     TryAgainWithTrue,
     TryAgainWithFalse
 }
+
+enum class ReviewQuestionProperty {
+    WeakQuestions,
+    MediumQuestions,
+    StrongQuestions,
+    AllFamiliarQuestions,
+    YourFavoriteQuestions
+}

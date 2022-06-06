@@ -3,55 +3,68 @@ package com.alva.codedelaroute.repositories
 import android.util.Log
 import com.alva.codedelaroute.models.Question
 import com.alva.codedelaroute.models.QuestionProgress
-import io.realm.MutableRealm
 import io.realm.Realm
 import io.realm.realmListOf
-import java.util.Date
 
 class QuestionProgressRepo(val realm: Realm) {
     fun getAnsweredQuestionsByTopicId(topicId: Long): MutableList<QuestionProgress> {
         var result = mutableListOf<QuestionProgress>()
         try {
-            result = realm.query(QuestionProgress::class).query("topicId = '$topicId'").find().toMutableList()
+            result = realm.query(QuestionProgress::class, "topicId = '$topicId'").find().toMutableList()
         } catch (e: Exception) {
             Log.d("answered questions bug", e.toString())
         }
-        return result;
+        return result
     }
 
     fun getQuestionProgressByQuestionId(questionId: Long, topicId: Long): QuestionProgress {
-        val result = realm.query(QuestionProgress::class).query("questionId = '$questionId'").find()
-        val question = SqlRepo.getQuestionsByParentId(topicId).filter { it.id == questionId.toString() }[0]
-        return if (result.isEmpty()) {
-            var questionProgress = QuestionProgress()
+        val result = realm.query(QuestionProgress::class, "questionId = '$questionId'").first().find()
+        val question = SqlRepo.getQuestionsByParentId(topicId).first { it.id == questionId.toString() }
+        val questionProgress = QuestionProgress()
+        return if (result == null) {
             questionProgress.id = System.currentTimeMillis().toString()
             questionProgress.questionId = questionId.toString()
             questionProgress.topicId = topicId.toString()
             questionProgress.lastUpdate = System.currentTimeMillis().toDouble()
             questionProgress
-        } else if (result[0].boxNum != 0 && question.choices.filter { it.isCorrect }.size == result[0].choiceSelectedIds.size) {
-            var questionProgress = QuestionProgress()
-            questionProgress.questionId = result[0].questionId
-            questionProgress.id = result[0].id
-            questionProgress.topicId = result[0].topicId
+        } else if (result.boxNum != 0 && question.choices.filter { it.isCorrect }.size == result.choiceSelectedIds.size) {
+            questionProgress.questionId = result.questionId
+            questionProgress.id = result.id
+            questionProgress.topicId = result.topicId
             questionProgress.choiceSelectedIds = realmListOf()
-            questionProgress.progress = result[0].progress
-            questionProgress.boxNum = result[0].boxNum
-            questionProgress.lastUpdate = result[0].lastUpdate
-            questionProgress.bookmark = result[0].bookmark
-            questionProgress.round = result[0].round
-            questionProgress.stateId = result[0].stateId
-            questionProgress.times = result[0].times
+            questionProgress.progress = result.progress
+            questionProgress.boxNum = result.boxNum
+            questionProgress.lastUpdate = result.lastUpdate
+            questionProgress.bookmark = result.bookmark
+            questionProgress.round = result.round
+            questionProgress.stateId = result.stateId
+            questionProgress.times = result.times
             questionProgress
         } else {
-            result[0]
+            questionProgress.questionId = result.questionId
+            questionProgress.id = result.id
+            questionProgress.topicId = result.topicId
+            questionProgress.choiceSelectedIds = realmListOf()
+            questionProgress.progress = result.progress
+            questionProgress.boxNum = 0
+            questionProgress.lastUpdate = result.lastUpdate
+            questionProgress.bookmark = result.bookmark
+            questionProgress.round = result.round
+            questionProgress.stateId = result.stateId
+            questionProgress.times = result.times
+            questionProgress
         }
+    }
+
+    fun getProgressByQuestionId(questionId: Long): MutableList<Int> {
+        val result = realm.query(QuestionProgress::class, "questionId = '$questionId'").first().find()
+        return result!!.progress.toMutableList()
     }
 
     suspend fun addOrUpdateQuestionProgressToRepo(questionProgress: QuestionProgress) {
         realm.write {
             val result =
-                realm.query(QuestionProgress::class).query("questionId = '${questionProgress.questionId}'").first()
+                realm.query(QuestionProgress::class, "questionId = '${questionProgress.questionId}'").first()
                     .find()
             if (result == null) {
                 this.copyToRealm(questionProgress)
@@ -64,13 +77,62 @@ class QuestionProgressRepo(val realm: Realm) {
                 tmp.topicId = result.topicId
                 tmp.questionId = result.questionId
                 tmp.id = result.id
-                tmp.bookmark = result.bookmark
-                tmp.round = result.round
+                tmp.bookmark = questionProgress.bookmark
+                tmp.round = questionProgress.round
                 tmp.stateId = result.stateId
-                tmp.times = result.times
+                tmp.times = questionProgress.times
                 this.delete(this.findLatest(result)!!)
                 this.copyToRealm(tmp)
             }
         }
+    }
+
+    suspend fun clearQuestionProgressData(subTopicId: Long) {
+        realm.write {
+            val questionProgressList = realm.query(QuestionProgress::class, "topicId = '$subTopicId'").find()
+            for (questionProgressItem in questionProgressList) {
+                val tmp = QuestionProgress()
+                tmp.progress = questionProgressItem.progress
+                tmp.lastUpdate = System.currentTimeMillis().toDouble()
+                tmp.choiceSelectedIds = realmListOf()
+                tmp.boxNum = 0
+                tmp.topicId = questionProgressItem.topicId
+                tmp.questionId = questionProgressItem.questionId
+                tmp.id = questionProgressItem.id
+                tmp.bookmark = questionProgressItem.bookmark
+                tmp.round = questionProgressItem.round
+                tmp.stateId = questionProgressItem.stateId
+                tmp.times = questionProgressItem.times
+                questionProgressItem.also { delete(findLatest(it)!!) }
+                this.copyToRealm(tmp)
+            }
+        }
+    }
+
+    fun getAllAnsweredQuestions(): MutableList<Question> {
+        val questionProgressList = realm.query(QuestionProgress::class).find()
+        val results = mutableListOf<Question>()
+        for (questionProgress in questionProgressList) {
+            val tmp = realm.query(Question::class, "id = '${questionProgress.questionId}'").first().find()
+            if (tmp != null) {
+                results.add(tmp)
+            }
+        }
+        return results
+    }
+
+    fun getAllQuestionProgress(): MutableList<QuestionProgress> {
+        return realm.query(QuestionProgress::class).find().toMutableList()
+    }
+
+    fun getAnsweredQuestionsByQuestionProgressList(questionProgressList: MutableList<QuestionProgress>): MutableList<Question> {
+        val results = mutableListOf<Question>()
+        for (questionProgress in questionProgressList) {
+            val tmp = realm.query(Question::class, "id = '${questionProgress.questionId}'").first().find()
+            if (tmp != null) {
+                results.add(tmp)
+            }
+        }
+        return results
     }
 }

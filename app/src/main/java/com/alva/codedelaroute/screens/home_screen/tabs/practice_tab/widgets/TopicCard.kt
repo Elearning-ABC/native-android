@@ -1,6 +1,5 @@
-package com.alva.codedelaroute.screens.practice_screen.widgets
+package com.alva.codedelaroute.screens.home_screen.widgets
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
@@ -19,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alva.codedelaroute.models.Topic
 import com.alva.codedelaroute.models.TopicProgress
-import com.alva.codedelaroute.ui.theme.TitleCardColor
+import com.alva.codedelaroute.utils.TitleCardColor
 import com.alva.codedelaroute.widgets.CustomProgressBar
 import com.alva.codedelaroute.widgets.SvgImage
 import kotlin.math.roundToInt
@@ -32,7 +31,7 @@ fun TopicCard(topic: Topic, modifier: Modifier = Modifier, mainTopicProgress: To
         backgroundColor = Color.White,
         elevation = 10.dp
     ) {
-        var percentage = mainTopicProgress.correctNumber.toFloat() / mainTopicProgress.totalQuestionNumber
+        val percentage = mainTopicProgress.correctNumber.toFloat() / mainTopicProgress.totalQuestionNumber
 
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
@@ -47,15 +46,15 @@ fun TopicCard(topic: Topic, modifier: Modifier = Modifier, mainTopicProgress: To
                 )
                 Spacer(modifier = Modifier.size(16.dp))
                 Box(
-                    modifier = Modifier.size(30.dp).clip(RoundedCornerShape(corner = CornerSize(8.dp))).background(
+                    modifier = Modifier.size(24.dp).clip(RoundedCornerShape(corner = CornerSize(8.dp))).background(
                         brush = Brush.radialGradient(
-                            colors = listOf(Color(0xff969BFF), Color(0xff002395)),
+                            colors = listOf(Color(0xff969BFF), Color(0xFF002395)),
                             radius = 100f,
                             center = Offset(60f, 1f)
                         )
                     ), contentAlignment = Alignment.Center
                 ) {
-                    SvgImage(svgLink = topic.icon, color = Color.White)
+                    SvgImage(svgLink = topic.icon, color = Color.White, modifier = Modifier.padding(3.dp))
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -65,7 +64,7 @@ fun TopicCard(topic: Topic, modifier: Modifier = Modifier, mainTopicProgress: To
                     CustomProgressBar(
                         Modifier.height(8.dp).clip(shape = RoundedCornerShape(4.dp)),
                         Color(0xFFCAD1F5),
-                        Color(0xFF2B5AF5),
+                        Color(0xFF002395),
                         percentage,
                     )
                 }

@@ -1,5 +1,6 @@
 package com.alva.codedelaroute.screens.child_topic_list_screen
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,8 +21,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.alva.codedelaroute.R
@@ -30,23 +29,25 @@ import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.navigations.Routes
 import com.alva.codedelaroute.screens.child_topic_list_screen.widgets.ChildTopicCard
 import com.alva.codedelaroute.screens.child_topic_list_screen.widgets.ChildTopicListAppBar
-import com.alva.codedelaroute.screens.child_topic_list_screen.widgets.CustomAlertDialog
+import com.alva.codedelaroute.widgets.CustomAlertDialog
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.view_models.TopicViewModel
 import com.alva.codedelaroute.widgets.CustomProgressBar
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.systemBarsPadding
+import kotlinx.coroutines.runBlocking
 
 @Composable
 fun ChildTopicListScreen(
-    navController: NavController, parentId: String, topicViewModel: TopicViewModel = viewModel(
+    navController: NavController, parentId: String,
+    topicViewModel: TopicViewModel = viewModel(
         viewModelStoreOwner = TopicViewModel.viewModelStoreOwner,
         key = TopicViewModel.key
     ),
     questionViewModel: QuestionViewModel = viewModel(
         viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner,
         key = QuestionViewModel.key
-    )
+    ),
 ) {
     val parentTopic = topicViewModel.getTopicById(parentId.toLong())
     val subTopics = topicViewModel.getSubTopic(parentId.toLong())
@@ -60,6 +61,8 @@ fun ChildTopicListScreen(
 
     val openDialog = remember { mutableStateOf(false) }
 
+    val subTopicIdCallback = remember { mutableStateOf("") }
+
     Surface(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.background_2),
@@ -72,11 +75,32 @@ fun ChildTopicListScreen(
             parentTopic,
             subTopicProgressList,
             mainTopicProgress,
-            questionViewModel,
-            openDialog
+            topicViewModel,
+            openDialog,
+            subTopicIdCallback
         )
         if (openDialog.value) {
-            CustomAlertDialog(openDialog)
+            CustomAlertDialog(
+                openDialog,
+                title = "LEARN AGAIN",
+                description = "Do you want to reset all progress of this practice?",
+                buttonAcceptTitle = "Reset",
+                buttonCancelTitle = "Not Now",
+                buttonAcceptClick = {
+                    runBlocking {
+                        topicViewModel.clearSubTopicProgressData(
+                            subTopicId = subTopicIdCallback.value.toLong(),
+                            parentTopicId = parentId.toLong()
+                        )
+                        questionViewModel.clearQuestionProgressData(
+                            subTopicIdCallback.value.toLong()
+                        )
+                        navController.navigate(Routes.QuestionScreen.name + "/${subTopicIdCallback.value}")
+                    }
+                    openDialog.value = false
+                },
+                buttonCancelClick = { openDialog.value = false },
+            )
         }
     }
 }
@@ -87,8 +111,9 @@ fun ChildTopicList(
     navController: NavController,
     subTopics: MutableList<Topic>,
     subTopicProgressList: MutableList<TopicProgress>,
-    questionViewModel: QuestionViewModel,
-    openDialog: MutableState<Boolean>
+    topicViewModel: TopicViewModel,
+    openDialog: MutableState<Boolean>,
+    subTopicIdCallback: MutableState<String>
 ) {
     Surface(modifier = modifier, shape = RoundedCornerShape(corner = CornerSize(20.dp))) {
         Image(
@@ -99,13 +124,14 @@ fun ChildTopicList(
         LazyColumn(modifier = Modifier.padding(top = 16.dp)) {
             items(subTopics.size) {
                 ChildTopicCard(subTopics[it], Modifier.clickable {
-                    if (!questionViewModel.checkFinishedTopic(
-                            questionViewModel.getQuestionsByParentId(subTopics[it].id.toLong()),
-                            subTopics[it].id.toLong()
+                    if (!topicViewModel.checkFinishedTopic(
+                            subTopics[it].id
                         )
                     ) {
                         navController.navigate(Routes.QuestionScreen.name + "/${subTopics[it].id}")
                     } else {
+                        subTopicIdCallback.value = subTopics[it].id
+                        Log.d("Hey", subTopicIdCallback.value)
                         openDialog.value = true
                     }
                 }, subTopicProgressList[it])
@@ -121,8 +147,9 @@ fun ChildTopicListPanel(
     parentTopic: Topic,
     subTopicProgressList: MutableList<TopicProgress>,
     mainTopicProgress: TopicProgress,
-    questionViewModel: QuestionViewModel,
-    openDialog: MutableState<Boolean>
+    topicViewModel: TopicViewModel,
+    openDialog: MutableState<Boolean>,
+    subTopicIdCallback: MutableState<String>
 ) {
     val percentage = mainTopicProgress.correctNumber.toFloat() / mainTopicProgress.totalQuestionNumber
 
@@ -136,7 +163,7 @@ fun ChildTopicListPanel(
                     CustomProgressBar(
                         Modifier.height(8.dp).clip(shape = RoundedCornerShape(4.dp)),
                         Color(0xFFCAD1F5),
-                        Color(0xFF2B5AF5),
+                        Color(0xFF002395),
                         percentage,
                     )
                 }
@@ -147,8 +174,9 @@ fun ChildTopicListPanel(
                     navController,
                     subTopics = subTopics,
                     subTopicProgressList = subTopicProgressList,
-                    questionViewModel = questionViewModel,
-                    openDialog = openDialog
+                    topicViewModel = topicViewModel,
+                    openDialog = openDialog,
+                    subTopicIdCallback = subTopicIdCallback
                 )
             }
         }
