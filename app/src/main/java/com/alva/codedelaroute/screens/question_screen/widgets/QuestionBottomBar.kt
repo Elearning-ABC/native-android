@@ -11,6 +11,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -37,39 +38,23 @@ import java.util.Locale
 
 @Composable
 fun QuestionBottomBar(
-    navController: NavController,
-    questionViewModel: QuestionViewModel = viewModel(
-        viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner,
-        key = QuestionViewModel.key
-    ),
-    topicViewModel: TopicViewModel = viewModel(
-        viewModelStoreOwner = TopicViewModel.viewModelStoreOwner,
-        key = TopicViewModel.key
-    ),
-    question: Question,
-    questionProgress: QuestionProgress,
-    subTopicId: String,
+    bookmark: MutableState<Boolean>,
+    onFlagClick: () -> Unit,
+    onBookMarkClick: () -> Unit,
+    onNextClick: () -> Unit
 ) {
-    val bookmark = remember { mutableStateOf(questionProgress.bookmark) }
-    val context = LocalContext.current
+
 
     NavigationBar(contentColor = Color.Black, containerColor = Color.White) {
-        NavigationBarItem(onClick = {}, selected = false, icon = {
+        NavigationBarItem(onClick = {
+            onFlagClick()
+        }, selected = false, icon = {
             Icon(
                 painterResource(R.drawable.flag_icon), contentDescription = null, modifier = Modifier.size(24.dp)
             )
         })
         NavigationBarItem(onClick = {
-            runBlocking {
-                bookmark.value = !bookmark.value
-                questionProgress.bookmark = bookmark.value
-                questionViewModel.addOrUpdateQuestionProgressToRepo(questionProgress)
-                if (bookmark.value) {
-                    Toast.makeText(context, "Added to your favorite", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(context, "Remove from your favorite", Toast.LENGTH_SHORT).show()
-                }
-            }
+            onBookMarkClick()
         }, selected = false, icon = {
             Icon(
                 if (bookmark.value) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -78,22 +63,7 @@ fun QuestionBottomBar(
             )
         })
         NavigationBarItem(onClick = {
-            Log.d("Hello", topicViewModel.checkFinishedTopic(topicId = subTopicId).toString())
-            var routeName = ""
-            if (topicViewModel.checkFinishedTopic(topicId = subTopicId)) {
-                Log.d("Hey", "Yo")
-                routeName = Routes.FinishTopicScreen.name
-                navController.popBackStack()
-                navController.navigate("$routeName/$subTopicId")
-            } else {
-                Log.d("Hey", "Hey")
-                if (questionViewModel.isFinishQuestion(question, questionProgress)) {
-                    Log.d("Hey", "Yup")
-                    routeName = Routes.QuestionScreen.name
-                    navController.popBackStack()
-                    navController.navigate("$routeName/$subTopicId/${ReviewQuestionProperty.None.name}")
-                }
-            }
+            onNextClick()
         }, selected = false, icon = {
             Icon(
                 painterResource(R.drawable.arrow_forward_icon),

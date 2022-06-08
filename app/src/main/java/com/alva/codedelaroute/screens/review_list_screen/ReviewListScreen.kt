@@ -2,6 +2,7 @@ package com.alva.codedelaroute.screens.review_list_screen
 
 import android.graphics.BitmapFactory
 import android.widget.Space
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
@@ -15,10 +16,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -45,11 +43,13 @@ import androidx.navigation.NavController
 import com.alva.codedelaroute.R
 import com.alva.codedelaroute.models.Answer
 import com.alva.codedelaroute.models.Question
+import com.alva.codedelaroute.navigations.Routes
 import com.alva.codedelaroute.screens.review_list_screen.widgets.ReviewButton
 import com.alva.codedelaroute.utils.ReviewQuestionProperty
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.systemBarsPadding
+import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.time.Month
 
@@ -58,8 +58,7 @@ fun ReviewListScreen(
     navController: NavController,
     reviewQuestionProperty: ReviewQuestionProperty,
     questionViewModel: QuestionViewModel = viewModel(
-        viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner,
-        key = QuestionViewModel.key
+        viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner, key = QuestionViewModel.key
     )
 ) {
     val questionListByReviewQuestionProperty = when (reviewQuestionProperty) {
@@ -77,26 +76,23 @@ fun ReviewListScreen(
             contentScale = ContentScale.Crop
         )
         ProvideWindowInsets {
-            Scaffold(
-                modifier = Modifier.fillMaxSize().systemBarsPadding(true),
+            Scaffold(modifier = Modifier.fillMaxSize().systemBarsPadding(true),
                 backgroundColor = Color.Transparent,
                 topBar = {
-                    SmallTopAppBar(
-                        navigationIcon = {
-                            IconButton(onClick = {
-                                navController.popBackStack()
-                            }) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = null)
-                            }
-                        },
-                        title = {
-                            Text(
-                                "${reviewQuestionProperty.name} (${questionListByReviewQuestionProperty.size})",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp,
-                                lineHeight = 24.sp
-                            )
-                        }, colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent)
+                    SmallTopAppBar(navigationIcon = {
+                        IconButton(onClick = {
+                            navController.popBackStack()
+                        }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = null)
+                        }
+                    }, title = {
+                        Text(
+                            "${reviewQuestionProperty.name} (${questionListByReviewQuestionProperty.size})",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 18.sp,
+                            lineHeight = 24.sp
+                        )
+                    }, colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent)
                     )
                 }) { innerPadding ->
                 Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
@@ -120,7 +116,9 @@ fun ReviewListScreen(
                                 progressList = progressList,
                                 item = item,
                                 imageBitmap = imageBitmap,
-                                choices = choices
+                                choices = choices,
+                                questionViewModel = questionViewModel,
+                                questionId = item.id
                             )
                         }
                         item {
@@ -128,7 +126,7 @@ fun ReviewListScreen(
                         }
                     }
                     ReviewButton(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp)) {
-
+                        navController.navigate(Routes.ReviewQuestionScreen.name + "/$reviewQuestionProperty")
                     }
                 }
             }
@@ -142,28 +140,32 @@ fun ReviewItemCard(
     progressList: MutableList<Int>,
     item: Question,
     imageBitmap: MutableState<ImageBitmap?>,
-    choices: List<Answer>
+    choices: List<Answer>,
+    questionViewModel: QuestionViewModel,
+    questionId: String
 ) {
+    val questionProgress =
+        questionViewModel.getQuestionProgressByQuestionId(questionId.toLong(), isInReviewScreen = true)
+
+    val bookmark = remember { mutableStateOf(questionProgress.bookmark) }
+
+    val context = LocalContext.current
+
     Card(
-        modifier = Modifier.padding(top = 16.dp, start = 24.dp, end = 24.dp).fillMaxWidth()
-            .clickable {
-                showAnswer.value = !showAnswer.value
-            },
-        shape = RoundedCornerShape(corner = CornerSize(8.dp)),
-        backgroundColor = Color.White,
-        elevation = 5.dp
+        modifier = Modifier.padding(top = 16.dp, start = 24.dp, end = 24.dp).fillMaxWidth().clickable {
+            showAnswer.value = !showAnswer.value
+        }, shape = RoundedCornerShape(corner = CornerSize(8.dp)), backgroundColor = Color.White, elevation = 5.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 LazyRow(modifier = Modifier.weight(1f)) {
                     items(items = progressList) {
-                        if (it == 1)
-                            Icon(
-                                Icons.Default.Check,
-                                tint = Color(0xFF00C17C),
-                                contentDescription = null,
-                                modifier = Modifier.padding(2.dp).size(10.dp)
-                            )
+                        if (it == 1) Icon(
+                            Icons.Default.Check,
+                            tint = Color(0xFF00C17C),
+                            contentDescription = null,
+                            modifier = Modifier.padding(2.dp).size(10.dp)
+                        )
                         else {
                             Icon(
                                 Icons.Default.Close,
@@ -174,18 +176,27 @@ fun ReviewItemCard(
                         }
                     }
                 }
-                Icon(
-                    Icons.Default.FavoriteBorder,
+                Spacer(modifier = Modifier.width(16.dp))
+                Icon(if (bookmark.value) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = null,
-                    tint = Color(0xFF0B2EA0)
-                )
+                    tint = Color(0xFF0B2EA0),
+                    modifier = Modifier.clickable {
+                        runBlocking {
+                            bookmark.value = !bookmark.value
+                            questionProgress.bookmark = !questionProgress.bookmark
+                            questionViewModel.addOrUpdateQuestionProgressToRepo(questionProgress)
+                            if (bookmark.value) {
+                                Toast.makeText(context, "Added to your favorite", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Remove from your favorite", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    })
             }
             Spacer(modifier = Modifier.height(16.dp))
             Row {
                 Text(
-                    item.text,
-                    modifier = Modifier.weight(1f),
-                    fontSize = 16.sp
+                    item.text, modifier = Modifier.weight(1f), fontSize = 16.sp
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 imageBitmap.value?.apply {
@@ -225,8 +236,7 @@ fun ReviewItemCard(
                             Text(
                                 choice.text,
                                 modifier = Modifier.padding(
-                                    vertical = 10.dp,
-                                    horizontal = 8.dp
+                                    vertical = 10.dp, horizontal = 8.dp
                                 ),
                                 color = Color(0xFF4D4D4D),
                                 fontSize = 16.sp,

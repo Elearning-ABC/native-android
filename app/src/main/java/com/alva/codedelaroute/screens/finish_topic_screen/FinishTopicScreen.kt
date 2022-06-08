@@ -153,7 +153,7 @@ fun FinishTopicScreen(
                         subTopicId.toLong()
                     )
                     navController.popBackStack()
-                    navController.navigate(Routes.QuestionScreen.name + "/${subTopicId}/${ReviewQuestionProperty.None.name}")
+                    navController.navigate(Routes.QuestionScreen.name + "/${subTopicId}")
                 }
                 openDialog.value = false
             },
@@ -188,7 +188,7 @@ fun ControlPanel(
                 navController.popBackStack()
             } else {
                 navController.popBackStack()
-                navController.navigate(Routes.QuestionScreen.name + "/${nextTopicId}/${ReviewQuestionProperty.None.name}")
+                navController.navigate(Routes.QuestionScreen.name + "/${nextTopicId}")
             }
         }
     }

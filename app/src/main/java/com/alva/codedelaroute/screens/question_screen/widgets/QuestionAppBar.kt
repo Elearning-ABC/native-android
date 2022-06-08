@@ -22,12 +22,12 @@ import com.alva.codedelaroute.models.Topic
 
 @Composable
 fun QuestionAppBar(
-    navController: NavController,
-    appBarTitle: String
+    appBarTitle: String,
+    onBackPress: () -> Unit
 ) {
     SmallTopAppBar(navigationIcon = {
         IconButton(onClick = {
-            navController.popBackStack()
+            onBackPress()
         }) {
             Icon(Icons.Default.ArrowBack, contentDescription = null)
         }

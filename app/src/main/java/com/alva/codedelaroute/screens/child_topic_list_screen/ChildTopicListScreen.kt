@@ -96,7 +96,7 @@ fun ChildTopicListScreen(
                         questionViewModel.clearQuestionProgressData(
                             subTopicIdCallback.value.toLong()
                         )
-                        navController.navigate(Routes.QuestionScreen.name + "/${subTopicIdCallback.value}/${ReviewQuestionProperty.None.name}")
+                        navController.navigate(Routes.QuestionScreen.name + "/${subTopicIdCallback.value}")
                     }
                     openDialog.value = false
                 },
@@ -129,7 +129,7 @@ fun ChildTopicList(
                             subTopics[it].id
                         )
                     ) {
-                        navController.navigate(Routes.QuestionScreen.name + "/${subTopics[it].id}/${ReviewQuestionProperty.None.name}")
+                        navController.navigate(Routes.QuestionScreen.name + "/${subTopics[it].id}")
                     } else {
                         subTopicIdCallback.value = subTopics[it].id
                         Log.d("Hey", subTopicIdCallback.value)

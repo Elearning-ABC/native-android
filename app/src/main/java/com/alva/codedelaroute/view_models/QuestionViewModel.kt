@@ -18,12 +18,42 @@ class QuestionViewModel : ViewModel() {
         var key = "QuestionViewModel"
     }
 
+    fun getEmptyQuestionProgressListProgress(questions: MutableList<Question>): MutableList<QuestionProgress> {
+        val list = mutableListOf<QuestionProgress>()
+        for (question in questions) {
+            val tmp = QuestionProgress()
+            val questionProgressInDb = getQuestionProgressByQuestionId(
+                question.id.toLong(), isInReviewScreen = true
+            )
+            tmp.apply {
+                id = questionProgressInDb.id
+                questionId = questionProgressInDb.questionId
+                progress = questionProgressInDb.progress
+                topicId = questionProgressInDb.topicId
+                lastUpdate = System.currentTimeMillis().toDouble()
+                choiceSelectedIds = realmListOf()
+                boxNum = 0
+                bookmark = questionProgressInDb.bookmark
+            }
+            list.add(tmp)
+        }
+        return list
+    }
+
     fun getQuestionsByParentId(parentId: Long): MutableList<Question> {
         return SqlRepo.getQuestionsByParentId(parentId)
     }
 
-    fun getQuestionProgressByQuestionId(questionId: Long, topicId: Long): QuestionProgress {
-        return SqlRepo.getQuestionProgressByQuestionId(questionId, topicId)
+    fun getQuestionProgressByQuestionId(
+        questionId: Long,
+        topicId: Long = 0,
+        isInReviewScreen: Boolean = false
+    ): QuestionProgress {
+        return SqlRepo.getQuestionProgressByQuestionId(questionId, topicId, isInReviewScreen)
+    }
+
+    fun getQuestionProgress(questionId: Long): QuestionProgress? {
+        return SqlRepo.getQuestionProgress(questionId)
     }
 
     suspend fun addOrUpdateQuestionProgressToRepo(questionProgress: QuestionProgress) {
@@ -39,11 +69,14 @@ class QuestionViewModel : ViewModel() {
     }
 
     fun goToNextQuestion(
-        questionList: MutableList<Question>, parentId: Long
+        questionList: MutableList<Question>,
+        parentId: Long
     ): Question {
         //Pre-processing
         val questionProgressList = SqlRepo.getAnsweredQuestionsByTopicId(parentId)
+
         val tmpList = mutableListOf<Question>()
+
         tmpList.addAll(questionList)
         for (questionProgress in questionProgressList) {
             if (questionProgress.choiceSelectedIds.size < tmpList.first { it.id == questionProgress.questionId }.correctAnswerNumber) return tmpList.first { it.id == questionProgress.questionId }
@@ -53,15 +86,58 @@ class QuestionViewModel : ViewModel() {
         //getQuestion
         if (tmpList.size > 0) {
             return tmpList.first()
-        }
-        else {
+        } else {
             questionProgressList.sortBy { it.lastUpdate }
             val previousQuestionProgress = questionProgressList.last()
             val failedQuestionList = questionProgressList.filter { it.boxNum == -1 }
 
             return if (failedQuestionList.size == 1 && previousQuestionProgress.boxNum == -1) {
-                val getRandomSuccessfulQuestion = questionProgressList.filter { it.boxNum == 1 }.random()
-                questionList.first { it.id == getRandomSuccessfulQuestion.questionId }
+                val successfulQuestionList = questionProgressList.filter { it.boxNum == 1 }
+                if (successfulQuestionList.isEmpty()) {
+                    questionList.first()
+                } else {
+                    val getRandomSuccessfulQuestion = successfulQuestionList.random()
+                    questionList.first { it.id == getRandomSuccessfulQuestion.questionId }
+                }
+            } else {
+                return if (failedQuestionList.isNotEmpty()) {
+                    val getRandomFailedQuestion = failedQuestionList.random()
+                    questionList.first { it.id == getRandomFailedQuestion.questionId }
+                } else {
+                    //No effective, just to prevent app from null pointer exception
+                    questionList.first()
+                }
+            }
+        }
+    }
+
+    fun goToNextReviewQuestion(
+        questionList: MutableList<Question>,
+        tempQuestionProgressList: MutableList<QuestionProgress>
+    ): Question {
+        val tmpList = mutableListOf<Question>()
+
+        tmpList.addAll(questionList)
+        for (questionProgress in tempQuestionProgressList) {
+            if (questionProgress.boxNum != 0) tmpList.remove(tmpList.first { it.id == questionProgress.questionId })
+        }
+
+        //getQuestion
+        if (tmpList.size > 0) {
+            return tmpList.first()
+        } else {
+            tempQuestionProgressList.sortBy { it.lastUpdate }
+            val previousQuestionProgress = tempQuestionProgressList.last()
+            val failedQuestionList = tempQuestionProgressList.filter { it.boxNum == -1 }
+
+            return if (failedQuestionList.size == 1 && previousQuestionProgress.boxNum == -1) {
+                val successfulQuestionList = tempQuestionProgressList.filter { it.boxNum == 1 }
+                if (successfulQuestionList.isEmpty()) {
+                    questionList.first()
+                } else {
+                    val getRandomSuccessfulQuestion = successfulQuestionList.random()
+                    questionList.first { it.id == getRandomSuccessfulQuestion.questionId }
+                }
             } else {
                 return if (failedQuestionList.isNotEmpty()) {
                     val getRandomFailedQuestion = failedQuestionList.random()
@@ -84,8 +160,8 @@ class QuestionViewModel : ViewModel() {
         answerId: String,
         currentQuestionProgress: QuestionProgress,
         question: Question,
-        subTopicProgress: TopicProgress,
-        mainTopicProgress: TopicProgress
+        subTopicProgress: TopicProgress?,
+        mainTopicProgress: TopicProgress?
     ) {
         val tmp = QuestionProgress()
         tmp.apply {
@@ -117,7 +193,7 @@ class QuestionViewModel : ViewModel() {
                     progressList.add(1)
                     if (!isQuestionAnsweredTrue(
                             questionId = question.id.toLong(), topicId = tmp.topicId.toLong()
-                        )
+                        ) && subTopicProgress != null && mainTopicProgress != null
                     ) {
                         SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress = subTopicProgress)
                         SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress = mainTopicProgress)
@@ -127,6 +203,10 @@ class QuestionViewModel : ViewModel() {
                 addOrUpdateQuestionProgressToRepo(tmp)
             }
         }
+    }
+
+    fun resetReviewQuestionPropertyData() {
+
     }
 
     fun isFinishQuestion(question: Question, currentQuestionProgress: QuestionProgress): Boolean {
@@ -170,6 +250,20 @@ class QuestionViewModel : ViewModel() {
         return 100.0f - getTrueQuestionsPercent(topicId) - getFalseQuestionsPercent(topicId)
     }
 
+    fun getTrueQuestionsPercentByQuestionProgressList(
+        questionProgressList: MutableList<QuestionProgress>
+    ): Float {
+        val trueQuestionsCount = questionProgressList.count { it.boxNum == 1 }
+        return trueQuestionsCount.toFloat() / questionProgressList.size
+    }
+
+    fun getFalseQuestionsPercentByQuestionProgressList(
+        questionProgressList: MutableList<QuestionProgress>
+    ): Float {
+        val falseQuestionsCount = questionProgressList.count { it.boxNum == -1 }
+        return falseQuestionsCount.toFloat() / questionProgressList.size
+    }
+
     suspend fun clearQuestionProgressData(subTopicId: Long) {
         SqlRepo.clearQuestionProgressData(subTopicId)
     }
@@ -190,11 +284,11 @@ class QuestionViewModel : ViewModel() {
         return getAllAnsweredQuestion().size
     }
 
-    fun getAllQuestionProgress(): MutableList<QuestionProgress> {
+    private fun getAllQuestionProgress(): MutableList<QuestionProgress> {
         return SqlRepo.getAllQuestionProgress()
     }
 
-    fun getQuestionProgressListByReviewProperty(reviewQuestionProperty: ReviewQuestionProperty): MutableList<QuestionProgress> {
+    private fun getQuestionProgressListByReviewProperty(reviewQuestionProperty: ReviewQuestionProperty): MutableList<QuestionProgress> {
         val allQuestionProgresses = getAllQuestionProgress()
         val samePropertyQuestionProgressList = mutableListOf<QuestionProgress>()
         for (questionProgress in allQuestionProgresses) {
@@ -215,7 +309,7 @@ class QuestionViewModel : ViewModel() {
         return getQuestionProgressListByReviewProperty(reviewQuestionProperty).size
     }
 
-    fun getAllFavoriteQuestionProgress(): MutableList<QuestionProgress> {
+    private fun getAllFavoriteQuestionProgress(): MutableList<QuestionProgress> {
         return getAllQuestionProgress().filter { it.bookmark }.toMutableList()
     }
 
@@ -229,5 +323,21 @@ class QuestionViewModel : ViewModel() {
 
     fun getProgressByQuestionId(questionId: Long): MutableList<Int> {
         return SqlRepo.getProgressByQuestionId(questionId)
+    }
+
+    fun getQuestionProgressListByQuestions(questionList: MutableList<Question>): MutableList<QuestionProgress> {
+        val questionProgressList = mutableListOf<QuestionProgress>()
+        for (question in questionList) {
+            getQuestionProgress(questionId = question.id.toLong())?.let {
+                questionProgressList.add(
+                    it
+                )
+            }
+        }
+        return questionProgressList
+    }
+
+    suspend fun clearQuestionProgressDataByQuestions(questionList: MutableList<Question>) {
+        SqlRepo.clearQuestionProgressDataByQuestions(questionList)
     }
 }

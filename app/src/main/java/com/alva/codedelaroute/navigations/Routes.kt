@@ -4,6 +4,7 @@ enum class Routes {
     HomeScreen,
     ChildTopicListScreen,
     QuestionScreen,
+    ReviewQuestionScreen,
     FinishTopicScreen,
     ReviewListScreen;
 
@@ -12,6 +13,7 @@ enum class Routes {
             HomeScreen.name -> HomeScreen
             ChildTopicListScreen.name -> ChildTopicListScreen
             QuestionScreen.name -> QuestionScreen
+            ReviewQuestionScreen.name -> ReviewQuestionScreen
             FinishTopicScreen.name -> FinishTopicScreen
             ReviewListScreen.name -> ReviewListScreen
             null -> HomeScreen

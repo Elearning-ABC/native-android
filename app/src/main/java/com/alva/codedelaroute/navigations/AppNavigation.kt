@@ -10,6 +10,7 @@ import com.alva.codedelaroute.screens.child_topic_list_screen.ChildTopicListScre
 import com.alva.codedelaroute.screens.home_screen.HomeScreen
 import com.alva.codedelaroute.screens.finish_topic_screen.FinishTopicScreen
 import com.alva.codedelaroute.screens.question_screen.QuestionScreen
+import com.alva.codedelaroute.screens.question_screen.ReviewQuestionScreen
 import com.alva.codedelaroute.screens.review_list_screen.ReviewListScreen
 import com.alva.codedelaroute.utils.ReviewQuestionProperty
 
@@ -30,19 +31,26 @@ fun AppNavigation() {
             }
         }
         composable(
-            Routes.QuestionScreen.name + "/{subTopicId}/{reviewQuestionProperty}",
+            Routes.QuestionScreen.name + "/{subTopicId}",
             arguments = listOf(navArgument("subTopicId") {
-                type = NavType.StringType
-            }, navArgument("reviewQuestionProperty") {
                 type = NavType.StringType
             })
         ) { backStackEntry ->
-            backStackEntry.arguments?.let {
+            backStackEntry.arguments?.getString("subTopicId")?.let {
                 QuestionScreen(
                     navController,
-                    subTopicId = it.getString("subTopicId")!!,
-                    reviewQuestionProperty = ReviewQuestionProperty.valueOf(it.getString("reviewQuestionProperty")!!)
+                    subTopicId = it
                 )
+            }
+        }
+        composable(
+            Routes.ReviewQuestionScreen.name + "/{reviewQuestionProperty}",
+            arguments = listOf(navArgument("reviewQuestionProperty") {
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
+            backStackEntry.arguments?.getString("reviewQuestionProperty")?.let {
+                ReviewQuestionScreen(navController, ReviewQuestionProperty.valueOf(it))
             }
         }
         composable(Routes.FinishTopicScreen.name + "/{subTopicId}", arguments = listOf(navArgument("subTopicId") {

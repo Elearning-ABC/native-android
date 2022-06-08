@@ -22,14 +22,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-@Preview
 @Composable
 fun ReviewButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
-    FilledTonalButton(modifier = modifier.shadow(10.dp, RoundedCornerShape(corner = CornerSize(12.dp)))
-        .clickable { onClick() },
+    FilledTonalButton(modifier = modifier.shadow(10.dp, RoundedCornerShape(corner = CornerSize(12.dp))),
         shape = RoundedCornerShape(corner = CornerSize(12.dp)),
         contentPadding = PaddingValues(),
-        onClick = { }) {
+        onClick = { onClick() }) {
         Box(
             modifier = Modifier.background(
                 Color(0xFF0B2EA0),

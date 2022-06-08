@@ -72,8 +72,12 @@ object SqlRepo : Application() {
         return questionProgressRepo.getAnsweredQuestionsByTopicId(topicId)
     }
 
-    fun getQuestionProgressByQuestionId(questionId: Long, topicId: Long): QuestionProgress {
-        return questionProgressRepo.getQuestionProgressByQuestionId(questionId, topicId)
+    fun getQuestionProgressByQuestionId(questionId: Long, topicId: Long, isInReviewScreen: Boolean): QuestionProgress {
+        return questionProgressRepo.getQuestionProgressByQuestionId(questionId, topicId, isInReviewScreen)
+    }
+
+    fun getQuestionProgress(questionId: Long) : QuestionProgress? {
+        return questionProgressRepo.getQuestionProgress(questionId)
     }
 
     suspend fun addOrUpdateQuestionProgressToRepo(questionProgress: QuestionProgress) {
@@ -98,6 +102,10 @@ object SqlRepo : Application() {
 
     fun getProgressByQuestionId(questionId: Long): MutableList<Int> {
         return questionProgressRepo.getProgressByQuestionId(questionId)
+    }
+
+    suspend fun clearQuestionProgressDataByQuestions(questionList: MutableList<Question>) {
+        questionProgressRepo.clearQuestionProgressDataByQuestions(questionList)
     }
 
     //TopicProgress Queries

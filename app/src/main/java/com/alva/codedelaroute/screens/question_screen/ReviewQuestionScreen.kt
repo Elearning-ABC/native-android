@@ -1,12 +1,17 @@
 package com.alva.codedelaroute.screens.question_screen
 
+import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -15,67 +20,73 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.alva.codedelaroute.R
-import com.alva.codedelaroute.models.*
-import com.alva.codedelaroute.navigations.Routes
+import com.alva.codedelaroute.models.QuestionProgress
 import com.alva.codedelaroute.screens.question_screen.widgets.*
+import com.alva.codedelaroute.utils.ReviewQuestionProperty
 import com.alva.codedelaroute.view_models.AnswerViewModel
 import com.alva.codedelaroute.view_models.QuestionViewModel
-import com.alva.codedelaroute.view_models.TopicViewModel
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.systemBarsPadding
+import io.realm.realmListOf
 import kotlinx.coroutines.runBlocking
 
 @Composable
-fun QuestionScreen(
+fun ReviewQuestionScreen(
     navController: NavController = rememberNavController(),
-    subTopicId: String,
+    reviewQuestionProperty: ReviewQuestionProperty,
     questionViewModel: QuestionViewModel = viewModel(
         viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner, key = QuestionViewModel.key
-    ),
-    topicViewModel: TopicViewModel = viewModel(
-        viewModelStoreOwner = TopicViewModel.viewModelStoreOwner, key = TopicViewModel.key
     ),
     answerViewModel: AnswerViewModel = viewModel(
         viewModelStoreOwner = AnswerViewModel.viewModelStoreOwner, key = AnswerViewModel.key
     )
 ) {
-    val subTopic: Topic = topicViewModel.getTopicById(subTopicId.toLong())
-    val mainTopic: Topic = topicViewModel.getTopicById(subTopic.parentId.toLong())
-    val subTopicProgress: TopicProgress = topicViewModel.getTopicProgressByTopicId(subTopicId.toLong())
-    val mainTopicProgress: TopicProgress = topicViewModel.getTopicProgressByTopicId(mainTopic.id.toLong())
+    val questions = remember {
+        when (reviewQuestionProperty) {
+            ReviewQuestionProperty.YourFavoriteQuestions -> questionViewModel.getAllFavoriteQuestions()
+            ReviewQuestionProperty.AllFamiliarQuestions -> questionViewModel.getAllAnsweredQuestion()
+            else -> questionViewModel.getQuestionListByReviewProperty(reviewQuestionProperty)
+        }
+    }
 
-    val questions = questionViewModel.getQuestionsByParentId(subTopicId.toLong())
+    val tempQuestionProgressList = remember {
+        questionViewModel.getEmptyQuestionProgressListProgress(questions)
+    }
 
     val currentQuestion =
-        remember { mutableStateOf(questionViewModel.goToNextQuestion(questions, subTopicId.toLong())) }
+        remember { mutableStateOf(questionViewModel.goToNextReviewQuestion(questions, tempQuestionProgressList)) }
 
-    var questionProgress =
-        questionViewModel.getQuestionProgressByQuestionId(currentQuestion.value.id.toLong(), subTopicId.toLong())
+    var actualQuestionProgress = questionViewModel.getQuestionProgressByQuestionId(
+        currentQuestion.value.id.toLong(), isInReviewScreen = true
+    )
+
+    var tempQuestionProgress = tempQuestionProgressList.first { it.questionId == currentQuestion.value.id }
 
     val coroutine = rememberCoroutineScope()
 
     val enabled = remember {
         mutableStateOf(
             !questionViewModel.isFinishQuestion(
-                currentQuestion.value, currentQuestionProgress = questionProgress
+                currentQuestion.value, currentQuestionProgress = tempQuestionProgress
             )
         )
     }
 
     val checkFinishedQuestion =
-        remember { mutableStateOf(questionViewModel.isFinishQuestion(currentQuestion.value, questionProgress)) }
+        remember { mutableStateOf(questionViewModel.isFinishQuestion(currentQuestion.value, tempQuestionProgress)) }
 
     val answerStatus = remember {
         mutableStateOf(
             questionViewModel.getAnswerStatus(
-                question = currentQuestion.value, currentQuestionProgress = questionProgress
+                question = currentQuestion.value, currentQuestionProgress = tempQuestionProgress
             )
         )
     }
 
-    val bookmark = remember { mutableStateOf(questionProgress.bookmark) }
+    val bookmark = remember { mutableStateOf(tempQuestionProgress.bookmark) }
 
     val context = LocalContext.current
+
 
     ProvideWindowInsets {
         Surface(modifier = Modifier.systemBarsPadding(true).fillMaxSize()) {
@@ -86,20 +97,22 @@ fun QuestionScreen(
             )
             Scaffold(topBar = {
                 QuestionAppBar(
-                    appBarTitle = mainTopic.name + ": " + subTopic.name
+                    appBarTitle = reviewQuestionProperty.name + "(${questions.size})"
 
                 ) {
                     navController.popBackStack()
                 }
             }, backgroundColor = Color.Transparent, contentColor = Color.Transparent, bottomBar = {
-                QuestionBottomBar(bookmark = bookmark, onFlagClick = {}, onBookMarkClick = {
+                QuestionBottomBar(bookmark = bookmark, onFlagClick = {
+                    for (tmp in tempQuestionProgressList) {
+                        Log.d("Hello", tmp.questionId + ": " + tmp.boxNum)
+                    }
+                }, onBookMarkClick = {
                     runBlocking {
                         bookmark.value = !bookmark.value
-                        questionProgress = questionViewModel.getQuestionProgressByQuestionId(
-                            currentQuestion.value.id.toLong(), subTopicId.toLong()
-                        )
-                        questionProgress.bookmark = !questionProgress.bookmark
-                        questionViewModel.addOrUpdateQuestionProgressToRepo(questionProgress)
+                        tempQuestionProgress.bookmark = !tempQuestionProgress.bookmark
+                        actualQuestionProgress.bookmark = !actualQuestionProgress.bookmark
+                        questionViewModel.addOrUpdateQuestionProgressToRepo(actualQuestionProgress)
                         if (bookmark.value) {
                             Toast.makeText(context, "Added to your favorite", Toast.LENGTH_SHORT).show()
                         } else {
@@ -107,42 +120,46 @@ fun QuestionScreen(
                         }
                     }
                 }, onNextClick = {
-                    if (topicViewModel.checkFinishedTopic(topicId = subTopicId)) {
+                    if (tempQuestionProgressList.filter { it.boxNum == 1 }.size == questions.size) {
                         navController.popBackStack()
-                        navController.navigate(Routes.FinishTopicScreen.name + "/$subTopicId")
                     } else {
-                        if (questionViewModel.isFinishQuestion(currentQuestion.value, questionProgress)) {
+                        if (questionViewModel.isFinishQuestion(currentQuestion.value, tempQuestionProgress)) {
                             runBlocking {
                                 currentQuestion.value =
-                                    questionViewModel.goToNextQuestion(questions, subTopicId.toLong())
+                                    questionViewModel.goToNextReviewQuestion(questions, tempQuestionProgressList)
 
-                                questionProgress = questionViewModel.getQuestionProgressByQuestionId(
-                                    currentQuestion.value.id.toLong(), subTopicId.toLong()
+                                actualQuestionProgress = questionViewModel.getQuestionProgressByQuestionId(
+                                    currentQuestion.value.id.toLong(), isInReviewScreen = true
                                 )
 
+                                tempQuestionProgress =
+                                    tempQuestionProgressList.first { it.questionId == currentQuestion.value.id }
+
+                                if (tempQuestionProgress.boxNum != 0) tempQuestionProgress.choiceSelectedIds =
+                                    realmListOf()
+
                                 enabled.value = !questionViewModel.isFinishQuestion(
-                                    currentQuestion.value, currentQuestionProgress = questionProgress
+                                    currentQuestion.value, currentQuestionProgress = tempQuestionProgress
                                 )
 
                                 checkFinishedQuestion.value =
-                                    questionViewModel.isFinishQuestion(currentQuestion.value, questionProgress)
+                                    questionViewModel.isFinishQuestion(currentQuestion.value, tempQuestionProgress)
 
                                 answerStatus.value = questionViewModel.getAnswerStatus(
-                                    question = currentQuestion.value, currentQuestionProgress = questionProgress
+                                    question = currentQuestion.value, currentQuestionProgress = tempQuestionProgress
                                 )
 
-                                bookmark.value = questionProgress.bookmark
-                            }
+                                bookmark.value = tempQuestionProgress.bookmark
 //                            navController.popBackStack()
 //                            navController.navigate(Routes.QuestionScreen.name + "/$subTopicId/${ReviewQuestionProperty.None.name}")
+                            }
                         }
                     }
                 })
             }) { innerPadding ->
                 Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                    QuestionProgressBar(
-                        questionViewModel = questionViewModel,
-                        subTopicId = subTopicId,
+                    ReviewQuestionProgressBar(
+                        questionProgressList = tempQuestionProgressList,
                         checkFinishedQuestion = checkFinishedQuestion
                     )
                     Box(
@@ -154,15 +171,14 @@ fun QuestionScreen(
                             AnswerPanel(
                                 currentQuestion.value,
                                 questionViewModel,
-                                questionProgress,
+                                tempQuestionProgress,
                                 enabled,
                                 answerViewModel,
                                 coroutine,
                                 answerStatus,
                                 checkFinishedQuestion,
-                                subTopicProgress,
-                                mainTopicProgress,
-                                currentQuestion.value.explanation
+                                explanation = currentQuestion.value.explanation,
+                                isReviewScreen = true
                             )
                         }
                     }
