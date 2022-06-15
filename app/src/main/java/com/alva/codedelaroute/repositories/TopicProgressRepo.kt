@@ -1,12 +1,7 @@
 package com.alva.codedelaroute.repositories
 
-import android.util.Log
-import androidx.lifecycle.LiveData
-import com.alva.codedelaroute.models.QuestionProgress
 import com.alva.codedelaroute.models.TopicProgress
-import io.realm.MutableRealm
-import io.realm.Realm
-import kotlin.random.Random
+import io.realm.kotlin.Realm
 
 class TopicProgressRepo(val realm: Realm) {
     fun getTopicProgressByTopicId(topicId: Long): TopicProgress {

@@ -10,6 +10,7 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alva.codedelaroute.models.Question
 import com.alva.codedelaroute.models.QuestionProgress
@@ -19,7 +20,7 @@ import com.alva.codedelaroute.view_models.QuestionViewModel
 @Composable
 fun QuestionProgressBar(
     questionViewModel: QuestionViewModel = viewModel(
-        viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner, key = QuestionViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     ), subTopicId: String, checkFinishedQuestion: MutableState<Boolean>
 ) {
     val trueIndicatorProgress = remember { Animatable(questionViewModel.getTrueQuestionsPercent(subTopicId.toLong())) }

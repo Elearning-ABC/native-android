@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -22,11 +23,10 @@ import com.alva.codedelaroute.utils.ReviewQuestionProperty
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.view_models.TopicViewModel
 
-@Preview
 @Composable
 fun ReviewTab(
     navController: NavController = rememberNavController(), questionViewModel: QuestionViewModel = viewModel(
-        viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner, key = QuestionViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     )
 ) {
     LazyColumn {

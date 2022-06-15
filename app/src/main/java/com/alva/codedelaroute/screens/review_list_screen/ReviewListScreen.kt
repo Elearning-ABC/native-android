@@ -38,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.alva.codedelaroute.R
@@ -58,7 +59,7 @@ fun ReviewListScreen(
     navController: NavController,
     reviewQuestionProperty: ReviewQuestionProperty,
     questionViewModel: QuestionViewModel = viewModel(
-        viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner, key = QuestionViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     )
 ) {
     val questionListByReviewQuestionProperty = when (reviewQuestionProperty) {

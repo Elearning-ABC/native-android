@@ -16,6 +16,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -27,7 +28,7 @@ import com.alva.codedelaroute.view_models.AnswerViewModel
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.systemBarsPadding
-import io.realm.realmListOf
+import io.realm.kotlin.ext.realmListOf
 import kotlinx.coroutines.runBlocking
 
 @Composable
@@ -35,10 +36,10 @@ fun ReviewQuestionScreen(
     navController: NavController = rememberNavController(),
     reviewQuestionProperty: ReviewQuestionProperty,
     questionViewModel: QuestionViewModel = viewModel(
-        viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner, key = QuestionViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     ),
     answerViewModel: AnswerViewModel = viewModel(
-        viewModelStoreOwner = AnswerViewModel.viewModelStoreOwner, key = AnswerViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     )
 ) {
     val questions = remember {
@@ -88,75 +89,81 @@ fun ReviewQuestionScreen(
     val context = LocalContext.current
 
 
-    ProvideWindowInsets {
-        Surface(modifier = Modifier.systemBarsPadding(true).fillMaxSize()) {
-            Image(
-                painter = painterResource(id = R.drawable.background),
-                contentDescription = null,
-                contentScale = ContentScale.Crop
-            )
-            Scaffold(topBar = {
-                QuestionAppBar(
-                    appBarTitle = reviewQuestionProperty.name + "(${questions.size})"
 
-                ) {
-                    navController.popBackStack()
-                }
-            }, backgroundColor = Color.Transparent, contentColor = Color.Transparent, bottomBar = {
-                QuestionBottomBar(bookmark = bookmark, onFlagClick = {
-                    for (tmp in tempQuestionProgressList) {
-                        Log.d("Hello", tmp.questionId + ": " + tmp.boxNum)
-                    }
-                }, onBookMarkClick = {
-                    runBlocking {
-                        bookmark.value = !bookmark.value
-                        tempQuestionProgress.bookmark = !tempQuestionProgress.bookmark
-                        actualQuestionProgress.bookmark = !actualQuestionProgress.bookmark
-                        questionViewModel.addOrUpdateQuestionProgressToRepo(actualQuestionProgress)
-                        if (bookmark.value) {
-                            Toast.makeText(context, "Added to your favorite", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(context, "Remove from your favorite", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }, onNextClick = {
-                    if (tempQuestionProgressList.filter { it.boxNum == 1 }.size == questions.size) {
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.background),
+            contentDescription = null,
+            contentScale = ContentScale.Crop
+        )
+        ProvideWindowInsets {
+            Scaffold(
+                topBar = {
+                    QuestionAppBar(
+                        appBarTitle = reviewQuestionProperty.name + "(${questions.size})"
+
+                    ) {
                         navController.popBackStack()
-                    } else {
-                        if (questionViewModel.isFinishQuestion(currentQuestion.value, tempQuestionProgress)) {
-                            runBlocking {
-                                currentQuestion.value =
-                                    questionViewModel.goToNextReviewQuestion(questions, tempQuestionProgressList)
-
-                                actualQuestionProgress = questionViewModel.getQuestionProgressByQuestionId(
-                                    currentQuestion.value.id.toLong(), isInReviewScreen = true
-                                )
-
-                                tempQuestionProgress =
-                                    tempQuestionProgressList.first { it.questionId == currentQuestion.value.id }
-
-                                if (tempQuestionProgress.boxNum != 0) tempQuestionProgress.choiceSelectedIds =
-                                    realmListOf()
-
-                                enabled.value = !questionViewModel.isFinishQuestion(
-                                    currentQuestion.value, currentQuestionProgress = tempQuestionProgress
-                                )
-
-                                checkFinishedQuestion.value =
-                                    questionViewModel.isFinishQuestion(currentQuestion.value, tempQuestionProgress)
-
-                                answerStatus.value = questionViewModel.getAnswerStatus(
-                                    question = currentQuestion.value, currentQuestionProgress = tempQuestionProgress
-                                )
-
-                                bookmark.value = tempQuestionProgress.bookmark
-//                            navController.popBackStack()
-//                            navController.navigate(Routes.QuestionScreen.name + "/$subTopicId/${ReviewQuestionProperty.None.name}")
+                    }
+                },
+                backgroundColor = Color.Transparent,
+                contentColor = Color.Transparent,
+                modifier = Modifier.fillMaxSize().systemBarsPadding(true),
+                bottomBar = {
+                    QuestionBottomBar(bookmark = bookmark, onFlagClick = {
+                        for (tmp in tempQuestionProgressList) {
+                            Log.d("Hello", tmp.questionId + ": " + tmp.boxNum)
+                        }
+                    }, onBookMarkClick = {
+                        runBlocking {
+                            bookmark.value = !bookmark.value
+                            tempQuestionProgress.bookmark = !tempQuestionProgress.bookmark
+                            actualQuestionProgress.bookmark = !actualQuestionProgress.bookmark
+                            questionViewModel.addOrUpdateQuestionProgressToRepo(actualQuestionProgress)
+                            if (bookmark.value) {
+                                Toast.makeText(context, "Added to your favorite", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Remove from your favorite", Toast.LENGTH_SHORT).show()
                             }
                         }
-                    }
-                })
-            }) { innerPadding ->
+                    }, onNextClick = {
+                        if (tempQuestionProgressList.filter { it.boxNum == 1 }.size == questions.size) {
+                            navController.popBackStack()
+                        } else {
+                            if (questionViewModel.isFinishQuestion(currentQuestion.value, tempQuestionProgress)) {
+                                runBlocking {
+                                    currentQuestion.value =
+                                        questionViewModel.goToNextReviewQuestion(questions, tempQuestionProgressList)
+
+                                    actualQuestionProgress = questionViewModel.getQuestionProgressByQuestionId(
+                                        currentQuestion.value.id.toLong(), isInReviewScreen = true
+                                    )
+
+                                    tempQuestionProgress =
+                                        tempQuestionProgressList.first { it.questionId == currentQuestion.value.id }
+
+                                    if (tempQuestionProgress.boxNum != 0) tempQuestionProgress.choiceSelectedIds =
+                                        realmListOf()
+
+                                    enabled.value = !questionViewModel.isFinishQuestion(
+                                        currentQuestion.value, currentQuestionProgress = tempQuestionProgress
+                                    )
+
+                                    checkFinishedQuestion.value =
+                                        questionViewModel.isFinishQuestion(currentQuestion.value, tempQuestionProgress)
+
+                                    answerStatus.value = questionViewModel.getAnswerStatus(
+                                        question = currentQuestion.value, currentQuestionProgress = tempQuestionProgress
+                                    )
+
+                                    bookmark.value = tempQuestionProgress.bookmark
+//                            navController.popBackStack()
+//                            navController.navigate(Routes.QuestionScreen.name + "/$subTopicId/${ReviewQuestionProperty.None.name}")
+                                }
+                            }
+                        }
+                    })
+                }) { innerPadding ->
                 Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                     ReviewQuestionProgressBar(
                         questionProgressList = tempQuestionProgressList,

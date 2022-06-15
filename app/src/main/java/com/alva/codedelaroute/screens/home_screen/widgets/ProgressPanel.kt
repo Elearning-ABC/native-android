@@ -32,6 +32,7 @@ import com.alva.codedelaroute.R
 fun ProgressPanel() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
+        color = Color.White,
         elevation = 10.dp,
         shape = RoundedCornerShape(0.dp, 0.dp, 25.dp, 25.dp)
     ) {
@@ -53,6 +54,7 @@ fun ProgressPanel() {
                 ProgressInfoColumn(modifier = Modifier.weight(1f))
                 Spacer(modifier = Modifier.size(20.dp))
                 Surface(
+                    color = Color.White,
                     modifier = Modifier.size(height = 86.dp, width = 50.dp),
                     shape = RoundedCornerShape(corner = CornerSize(8.dp)),
                     border = BorderStroke(width = 1.dp, Color(0xFF97A8E9))

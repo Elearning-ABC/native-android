@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.accompanist.insets.ProvideWindowInsets
@@ -43,12 +44,10 @@ fun FinishTopicScreen(
     navController: NavController,
     subTopicId: String,
     topicViewModel: TopicViewModel = viewModel(
-        viewModelStoreOwner = TopicViewModel.viewModelStoreOwner,
-        key = TopicViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     ),
     questionViewModel: QuestionViewModel = viewModel(
-        viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner,
-        key = QuestionViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     )
 ) {
     val subTopic = topicViewModel.getTopicById(subTopicId.toLong())

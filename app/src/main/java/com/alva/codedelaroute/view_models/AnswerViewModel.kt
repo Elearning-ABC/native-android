@@ -10,16 +10,12 @@ import com.alva.codedelaroute.models.Question
 import com.alva.codedelaroute.models.QuestionProgress
 import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.utils.AnswerStatus
-import io.realm.toRealmList
+import io.realm.kotlin.ext.toRealmList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class AnswerViewModel : ViewModel() {
-    companion object {
-        var viewModelStoreOwner = ViewModelStoreOwner { ViewModelStore() }
-        var key = "AnswerViewModel"
-    }
 
     fun onAnswerClickHandler(
         answer: Answer,

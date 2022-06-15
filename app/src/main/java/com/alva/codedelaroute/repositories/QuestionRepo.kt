@@ -3,7 +3,7 @@ package com.alva.codedelaroute.repositories
 import android.util.Log
 import com.alva.codedelaroute.models.Question
 import com.alva.codedelaroute.models.QuestionProgress
-import io.realm.Realm
+import io.realm.kotlin.Realm
 import java.time.LocalDate
 
 class QuestionRepo(val realm: Realm) {

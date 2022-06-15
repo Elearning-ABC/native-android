@@ -21,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.alva.codedelaroute.R
@@ -29,7 +30,6 @@ import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.navigations.Routes
 import com.alva.codedelaroute.screens.child_topic_list_screen.widgets.ChildTopicCard
 import com.alva.codedelaroute.screens.child_topic_list_screen.widgets.ChildTopicListAppBar
-import com.alva.codedelaroute.utils.ReviewQuestionProperty
 import com.alva.codedelaroute.widgets.CustomAlertDialog
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.view_models.TopicViewModel
@@ -42,12 +42,10 @@ import kotlinx.coroutines.runBlocking
 fun ChildTopicListScreen(
     navController: NavController, parentId: String,
     topicViewModel: TopicViewModel = viewModel(
-        viewModelStoreOwner = TopicViewModel.viewModelStoreOwner,
-        key = TopicViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     ),
     questionViewModel: QuestionViewModel = viewModel(
-        viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner,
-        key = QuestionViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     ),
 ) {
     val parentTopic = topicViewModel.getTopicById(parentId.toLong())

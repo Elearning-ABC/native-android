@@ -1,7 +1,7 @@
 package com.alva.codedelaroute.repositories
 
 import com.alva.codedelaroute.models.TopicQuestion
-import io.realm.Realm
+import io.realm.kotlin.Realm
 
 class TopicQuestionRepo(val realm: Realm) {
     fun getQuestionIdListByParentId(parentId: Long): MutableList<String> {

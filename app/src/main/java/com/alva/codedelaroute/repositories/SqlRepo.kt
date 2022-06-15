@@ -1,13 +1,14 @@
 package com.alva.codedelaroute.repositories
 
 import android.app.Application
-import android.util.Log
 import com.alva.codedelaroute.models.*
 import com.alva.codedelaroute.utils.byteKey
-import io.realm.Realm
-import io.realm.RealmConfiguration
+import io.realm.kotlin.Realm
+import io.realm.kotlin.RealmConfiguration
 
 object SqlRepo : Application() {
+    private const val REALM_SCHEMA_VERSION: Long = 1
+
     private val realm: Realm
     private val topicRepo: TopicRepo
     private val questionRepo: QuestionRepo
@@ -29,7 +30,7 @@ object SqlRepo : Application() {
                 QuestionProgress::class,
                 TopicProgress::class
             )
-        ).encryptionKey(byteKey).name("default.realm").build()
+        ).schemaVersion(REALM_SCHEMA_VERSION).encryptionKey(byteKey).name("default.realm").build()
         realm = Realm.open(configuration)
 
         topicRepo = TopicRepo(realm)

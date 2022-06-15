@@ -12,6 +12,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alva.codedelaroute.models.Question
 import com.alva.codedelaroute.models.QuestionProgress
@@ -20,7 +21,7 @@ import com.alva.codedelaroute.view_models.QuestionViewModel
 @Composable
 fun ReviewQuestionProgressBar(
     questionViewModel: QuestionViewModel = viewModel(
-        viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner, key = QuestionViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     ),
     questionProgressList: MutableList<QuestionProgress>,
     checkFinishedQuestion: MutableState<Boolean>

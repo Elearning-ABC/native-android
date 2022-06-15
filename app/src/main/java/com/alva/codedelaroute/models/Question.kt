@@ -1,12 +1,13 @@
 package com.alva.codedelaroute.models
 
-import io.realm.RealmList
-import io.realm.RealmObject
-import io.realm.annotations.PrimaryKey
-import io.realm.realmListOf
+import io.realm.kotlin.ext.realmListOf
+import io.realm.kotlin.types.RealmList
+import io.realm.kotlin.types.RealmObject
+import io.realm.kotlin.types.annotations.PrimaryKey
 
 class Question : RealmObject {
-    @PrimaryKey var id: String = ""
+    @PrimaryKey
+    var id: String = ""
     var parentId: String = ""
     var paragraphId: String = ""
     var status: Int = 0

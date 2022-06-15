@@ -3,8 +3,8 @@ package com.alva.codedelaroute.repositories
 import android.util.Log
 import com.alva.codedelaroute.models.Question
 import com.alva.codedelaroute.models.QuestionProgress
-import io.realm.Realm
-import io.realm.realmListOf
+import io.realm.kotlin.Realm
+import io.realm.kotlin.ext.realmListOf
 
 class QuestionProgressRepo(val realm: Realm) {
     fun getAnsweredQuestionsByTopicId(topicId: Long): MutableList<QuestionProgress> {

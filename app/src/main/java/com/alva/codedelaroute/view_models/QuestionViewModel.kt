@@ -1,23 +1,16 @@
 package com.alva.codedelaroute.view_models
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.ViewModelStoreOwner
 import com.alva.codedelaroute.models.Question
 import com.alva.codedelaroute.models.QuestionProgress
 import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.repositories.SqlRepo
 import com.alva.codedelaroute.utils.AnswerStatus
 import com.alva.codedelaroute.utils.ReviewQuestionProperty
-import io.realm.realmListOf
-import io.realm.toRealmList
+import io.realm.kotlin.ext.realmListOf
+import io.realm.kotlin.ext.toRealmList
 
 class QuestionViewModel : ViewModel() {
-    companion object {
-        var viewModelStoreOwner = ViewModelStoreOwner { ViewModelStore() }
-        var key = "QuestionViewModel"
-    }
-
     fun getEmptyQuestionProgressListProgress(questions: MutableList<Question>): MutableList<QuestionProgress> {
         val list = mutableListOf<QuestionProgress>()
         for (question in questions) {
@@ -79,7 +72,7 @@ class QuestionViewModel : ViewModel() {
 
         tmpList.addAll(questionList)
         for (questionProgress in questionProgressList) {
-            if (questionProgress.choiceSelectedIds.size < tmpList.first { it.id == questionProgress.questionId }.correctAnswerNumber) return tmpList.first { it.id == questionProgress.questionId }
+            if (questionProgress.choiceSelectedIds.size < questionList.first { it.id == questionProgress.questionId }.correctAnswerNumber) return questionList.first { it.id == questionProgress.questionId }
             if (questionProgress.boxNum != 0) tmpList.remove(tmpList.first { it.id == questionProgress.questionId })
         }
 
@@ -205,10 +198,6 @@ class QuestionViewModel : ViewModel() {
         }
     }
 
-    fun resetReviewQuestionPropertyData() {
-
-    }
-
     fun isFinishQuestion(question: Question, currentQuestionProgress: QuestionProgress): Boolean {
         return question.correctAnswers.size == currentQuestionProgress.choiceSelectedIds.size
     }
@@ -226,10 +215,6 @@ class QuestionViewModel : ViewModel() {
                 else -> AnswerStatus.False
             }
         }
-    }
-
-    fun checkClickedAnswerList(answerId: String, currentQuestionProgress: QuestionProgress): Boolean {
-        return currentQuestionProgress.choiceSelectedIds.contains(answerId)
     }
 
     fun getTrueQuestionsPercent(topicId: Long): Float {

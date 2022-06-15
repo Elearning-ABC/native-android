@@ -12,6 +12,7 @@
             android:supportsRtl="true"
             android:theme="@style/Theme.CodeDeLaRoute">
         <activity
+                android:windowSoftInputMode="adjustNothing"
                 android:name=".MainActivity"
                 android:exported="true"
                 android:label="@string/app_name"

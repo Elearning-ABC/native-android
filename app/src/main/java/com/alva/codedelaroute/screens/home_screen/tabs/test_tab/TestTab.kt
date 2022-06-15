@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -20,7 +21,7 @@ import com.alva.codedelaroute.view_models.TopicViewModel
 @Composable
 fun TestTab(
     navController: NavController = rememberNavController(), topicViewModel: TopicViewModel = viewModel(
-        viewModelStoreOwner = TopicViewModel.viewModelStoreOwner, key = TopicViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     )
 ) {
     LazyColumn {

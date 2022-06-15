@@ -1,6 +1,8 @@
 package com.alva.codedelaroute.navigations
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +16,7 @@ import com.alva.codedelaroute.screens.question_screen.ReviewQuestionScreen
 import com.alva.codedelaroute.screens.review_list_screen.ReviewListScreen
 import com.alva.codedelaroute.utils.ReviewQuestionProperty
 
+@ExperimentalComposeUiApi
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()

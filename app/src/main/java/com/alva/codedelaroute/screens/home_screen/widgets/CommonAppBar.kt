@@ -1,6 +1,7 @@
+@file:OptIn(ExperimentalMaterialApi::class)
+
 package com.alva.codedelaroute.screens.home_screen.widgets
 
-import android.os.Build.VERSION.SDK_INT
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
@@ -10,47 +11,59 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.ImageLoader
-import coil.compose.rememberAsyncImagePainter
-import coil.decode.GifDecoder
-import coil.decode.ImageDecoderDecoder
-import coil.request.ImageRequest
 
 import com.alva.codedelaroute.R
 import com.alva.codedelaroute.view_models.OnStartViewModel
 import com.alva.codedelaroute.widgets.GifImage
-import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
-@Preview
+@ExperimentalComposeUiApi
+@ExperimentalMaterialApi
 @Composable
 fun CommonAppBar(
+    bottomSheetState: ModalBottomSheetState,
     onStartViewModel: OnStartViewModel = viewModel(
-        viewModelStoreOwner = OnStartViewModel.viewModelStoreOwner,
-        key = OnStartViewModel.key
-    )
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!,
+    ),
+    onClickCallBack: (String) -> Unit = {}
 ) {
     val ticks = remember { mutableStateOf(onStartViewModel.getTickerValue()) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(bottomSheetState) {
+        snapshotFlow { bottomSheetState.isVisible }.collect { isVisible ->
+            if (!isVisible) {
+                keyboardController?.hide()
+            } else {
+            }
+        }
+    }
 
     SmallTopAppBar(navigationIcon = {
-        IconButton(onClick = {}) {
+        IconButton(onClick = {
+            coroutineScope.launch {
+                onClickCallBack("menu")
+                if (!bottomSheetState.isVisible) {
+                    bottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
+                } else {
+                    bottomSheetState.animateTo(ModalBottomSheetValue.Hidden)
+                }
+            }
+        }) {
             Icon(
                 imageVector = Icons.Default.Menu, contentDescription = null
             )
@@ -64,7 +77,7 @@ fun CommonAppBar(
             }
         }
         if (ticks.value <= 19) {
-            Surface(shape = RoundedCornerShape(corner = CornerSize(8.dp))) {
+            Surface(shape = RoundedCornerShape(corner = CornerSize(8.dp)), color = Color.White) {
                 GifImage(
                     gifId = R.raw.button_get_pro,
                     modifier = Modifier.fillMaxWidth().height(40.dp),
@@ -118,7 +131,16 @@ fun CommonAppBar(
 //        }
     }, actions = {
         IconButton(
-            onClick = {}
+            onClick = {
+                coroutineScope.launch {
+                    onClickCallBack("profile")
+                    if (!bottomSheetState.isVisible) {
+                        bottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
+                    } else {
+                        bottomSheetState.animateTo(ModalBottomSheetValue.Hidden)
+                    }
+                }
+            }
         ) {
             Image(
                 painter = painterResource(id = R.drawable.profile_icon),

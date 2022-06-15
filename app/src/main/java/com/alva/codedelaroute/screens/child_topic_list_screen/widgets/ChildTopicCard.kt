@@ -30,7 +30,7 @@ fun ChildTopicCard(topic: Topic, modifier: Modifier = Modifier, subTopicProgress
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
             Text(
-                topic.name, style = MaterialTheme.typography.h5.copy(fontWeight = FontWeight.SemiBold)
+                topic.name, style = MaterialTheme.typography.h5.copy(fontWeight = FontWeight.SemiBold, color = Color.Black),
             )
             Text(
                 topic.totalQuestion.toString() + " questions without time limit",

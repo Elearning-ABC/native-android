@@ -11,6 +11,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -30,13 +31,13 @@ fun QuestionScreen(
     navController: NavController = rememberNavController(),
     subTopicId: String,
     questionViewModel: QuestionViewModel = viewModel(
-        viewModelStoreOwner = QuestionViewModel.viewModelStoreOwner, key = QuestionViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     ),
     topicViewModel: TopicViewModel = viewModel(
-        viewModelStoreOwner = TopicViewModel.viewModelStoreOwner, key = TopicViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     ),
     answerViewModel: AnswerViewModel = viewModel(
-        viewModelStoreOwner = AnswerViewModel.viewModelStoreOwner, key = AnswerViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     )
 ) {
     val subTopic: Topic = topicViewModel.getTopicById(subTopicId.toLong())
@@ -77,68 +78,73 @@ fun QuestionScreen(
 
     val context = LocalContext.current
 
-    ProvideWindowInsets {
-        Surface(modifier = Modifier.systemBarsPadding(true).fillMaxSize()) {
-            Image(
-                painter = painterResource(id = R.drawable.background),
-                contentDescription = null,
-                contentScale = ContentScale.Crop
-            )
-            Scaffold(topBar = {
-                QuestionAppBar(
-                    appBarTitle = mainTopic.name + ": " + subTopic.name
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.background),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+        )
+        ProvideWindowInsets {
+            Scaffold(
+                topBar = {
+                    QuestionAppBar(
+                        appBarTitle = mainTopic.name + ": " + subTopic.name
 
-                ) {
-                    navController.popBackStack()
-                }
-            }, backgroundColor = Color.Transparent, contentColor = Color.Transparent, bottomBar = {
-                QuestionBottomBar(bookmark = bookmark, onFlagClick = {}, onBookMarkClick = {
-                    runBlocking {
-                        bookmark.value = !bookmark.value
-                        questionProgress = questionViewModel.getQuestionProgressByQuestionId(
-                            currentQuestion.value.id.toLong(), subTopicId.toLong()
-                        )
-                        questionProgress.bookmark = !questionProgress.bookmark
-                        questionViewModel.addOrUpdateQuestionProgressToRepo(questionProgress)
-                        if (bookmark.value) {
-                            Toast.makeText(context, "Added to your favorite", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(context, "Remove from your favorite", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }, onNextClick = {
-                    if (topicViewModel.checkFinishedTopic(topicId = subTopicId)) {
+                    ) {
                         navController.popBackStack()
-                        navController.navigate(Routes.FinishTopicScreen.name + "/$subTopicId")
-                    } else {
-                        if (questionViewModel.isFinishQuestion(currentQuestion.value, questionProgress)) {
-                            runBlocking {
-                                currentQuestion.value =
-                                    questionViewModel.goToNextQuestion(questions, subTopicId.toLong())
-
-                                questionProgress = questionViewModel.getQuestionProgressByQuestionId(
-                                    currentQuestion.value.id.toLong(), subTopicId.toLong()
-                                )
-
-                                enabled.value = !questionViewModel.isFinishQuestion(
-                                    currentQuestion.value, currentQuestionProgress = questionProgress
-                                )
-
-                                checkFinishedQuestion.value =
-                                    questionViewModel.isFinishQuestion(currentQuestion.value, questionProgress)
-
-                                answerStatus.value = questionViewModel.getAnswerStatus(
-                                    question = currentQuestion.value, currentQuestionProgress = questionProgress
-                                )
-
-                                bookmark.value = questionProgress.bookmark
+                    }
+                },
+                backgroundColor = Color.Transparent,
+                contentColor = Color.Transparent,
+                modifier = Modifier.fillMaxSize().systemBarsPadding(true),
+                bottomBar = {
+                    QuestionBottomBar(bookmark = bookmark, onFlagClick = {}, onBookMarkClick = {
+                        runBlocking {
+                            bookmark.value = !bookmark.value
+                            questionProgress = questionViewModel.getQuestionProgressByQuestionId(
+                                currentQuestion.value.id.toLong(), subTopicId.toLong()
+                            )
+                            questionProgress.bookmark = !questionProgress.bookmark
+                            questionViewModel.addOrUpdateQuestionProgressToRepo(questionProgress)
+                            if (bookmark.value) {
+                                Toast.makeText(context, "Added to your favorite", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Remove from your favorite", Toast.LENGTH_SHORT).show()
                             }
+                        }
+                    }, onNextClick = {
+                        if (topicViewModel.checkFinishedTopic(topicId = subTopicId)) {
+                            navController.popBackStack()
+                            navController.navigate(Routes.FinishTopicScreen.name + "/$subTopicId")
+                        } else {
+                            if (questionViewModel.isFinishQuestion(currentQuestion.value, questionProgress)) {
+                                runBlocking {
+                                    currentQuestion.value =
+                                        questionViewModel.goToNextQuestion(questions, subTopicId.toLong())
+
+                                    questionProgress = questionViewModel.getQuestionProgressByQuestionId(
+                                        currentQuestion.value.id.toLong(), subTopicId.toLong()
+                                    )
+
+                                    enabled.value = !questionViewModel.isFinishQuestion(
+                                        currentQuestion.value, currentQuestionProgress = questionProgress
+                                    )
+
+                                    checkFinishedQuestion.value =
+                                        questionViewModel.isFinishQuestion(currentQuestion.value, questionProgress)
+
+                                    answerStatus.value = questionViewModel.getAnswerStatus(
+                                        question = currentQuestion.value, currentQuestionProgress = questionProgress
+                                    )
+
+                                    bookmark.value = questionProgress.bookmark
+                                }
 //                            navController.popBackStack()
 //                            navController.navigate(Routes.QuestionScreen.name + "/$subTopicId/${ReviewQuestionProperty.None.name}")
+                            }
                         }
-                    }
-                })
-            }) { innerPadding ->
+                    })
+                }) { innerPadding ->
                 Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                     QuestionProgressBar(
                         questionViewModel = questionViewModel,

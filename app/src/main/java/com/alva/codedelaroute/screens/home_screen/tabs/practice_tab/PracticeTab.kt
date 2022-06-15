@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.alva.codedelaroute.models.TopicProgress
@@ -17,10 +18,10 @@ import com.alva.codedelaroute.view_models.TopicViewModel
 @Composable
 fun PracticeTab(
     navController: NavController, topicViewModel: TopicViewModel = viewModel(
-        viewModelStoreOwner = TopicViewModel.viewModelStoreOwner, key = TopicViewModel.key
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
     )
 ) {
-    val mainTopics = topicViewModel.getMainTopic()
+    val mainTopics = topicViewModel.mainTopics
 
     val mainTopicProgressList = mutableListOf<TopicProgress>()
     for (topic in mainTopics) {
