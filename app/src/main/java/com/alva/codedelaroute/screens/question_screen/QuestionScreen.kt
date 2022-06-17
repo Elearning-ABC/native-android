@@ -1,3 +1,5 @@
+@file:OptIn(DelicateCoroutinesApi::class)
+
 package com.alva.codedelaroute.screens.question_screen
 
 import android.widget.Toast
@@ -24,6 +26,7 @@ import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.view_models.TopicViewModel
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.systemBarsPadding
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.runBlocking
 
 @Composable

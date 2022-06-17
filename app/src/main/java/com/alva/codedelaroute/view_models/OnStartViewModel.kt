@@ -3,9 +3,7 @@ package com.alva.codedelaroute.view_models
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
-import com.alva.codedelaroute.R
-
-class OnStartViewModel : ViewModel() {
+class OnStartViewModel: ViewModel() {
 
     private var ticker = mutableStateOf(0)
 
@@ -16,4 +14,5 @@ class OnStartViewModel : ViewModel() {
     fun increaseTickerValue(value: Int) {
         ticker.value += value
     }
+
 }

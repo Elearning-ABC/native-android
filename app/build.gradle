@@ -63,7 +63,7 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
 
     //realm DB
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1-native-mt'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2'
     implementation 'io.realm.kotlin:library-base:1.0.0'
 
     //navigation
@@ -93,5 +93,9 @@ dependencies {
 
     //factory decode encode
     implementation 'com.google.code.gson:gson:2.9.0'
+
+    //shared preferences datastore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("androidx.datastore:datastore:1.0.0")
 }
 

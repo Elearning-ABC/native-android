@@ -29,8 +29,10 @@ import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.systemBarsPadding
 import io.realm.kotlin.ext.realmListOf
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.runBlocking
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun ReviewQuestionScreen(
     navController: NavController = rememberNavController(),

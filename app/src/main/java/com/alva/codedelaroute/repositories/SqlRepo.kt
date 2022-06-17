@@ -46,8 +46,8 @@ object SqlRepo : Application() {
     }
 
     //Topic Queries
-    fun getTopicsByParentId(parentId: Long): MutableList<Topic> {
-        return topicRepo.getTopicsByParentId(parentId)
+    fun getAllTopic(): MutableList<Topic> {
+        return topicRepo.getAllTopic()
     }
 
     fun getTopicById(id: Long): Topic {
@@ -55,7 +55,7 @@ object SqlRepo : Application() {
     }
 
     //TopicQuestion Queries
-    fun getQuestionIdListByParentId(parentId: Long): MutableList<String> {
+    private fun getQuestionIdListByParentId(parentId: Long): MutableList<String> {
         return topicQuestionRepo.getQuestionIdListByParentId(parentId)
     }
 
@@ -64,23 +64,7 @@ object SqlRepo : Application() {
         return questionRepo.getQuestionsByIdList(getQuestionIdListByParentId(parentId))
     }
 
-    fun getQuestionsByIdList(idList: MutableList<String>): MutableList<Question> {
-        return questionRepo.getQuestionsByIdList(idList)
-    }
-
     //QuestionProgress Queries
-    fun getAnsweredQuestionsByTopicId(topicId: Long): MutableList<QuestionProgress> {
-        return questionProgressRepo.getAnsweredQuestionsByTopicId(topicId)
-    }
-
-    fun getQuestionProgressByQuestionId(questionId: Long, topicId: Long, isInReviewScreen: Boolean): QuestionProgress {
-        return questionProgressRepo.getQuestionProgressByQuestionId(questionId, topicId, isInReviewScreen)
-    }
-
-    fun getQuestionProgress(questionId: Long) : QuestionProgress? {
-        return questionProgressRepo.getQuestionProgress(questionId)
-    }
-
     suspend fun addOrUpdateQuestionProgressToRepo(questionProgress: QuestionProgress) {
         questionProgressRepo.addOrUpdateQuestionProgressToRepo(questionProgress)
     }
@@ -89,8 +73,8 @@ object SqlRepo : Application() {
         questionProgressRepo.clearQuestionProgressData(subTopicId)
     }
 
-    fun getAllAnsweredQuestions(): MutableList<Question> {
-        return questionProgressRepo.getAllAnsweredQuestions()
+    fun getAllAnsweredQuestions(questionProgressList: MutableList<QuestionProgress>): MutableList<Question> {
+        return questionProgressRepo.getAllAnsweredQuestions(questionProgressList)
     }
 
     fun getAllQuestionProgress(): MutableList<QuestionProgress> {
@@ -103,10 +87,6 @@ object SqlRepo : Application() {
 
     fun getProgressByQuestionId(questionId: Long): MutableList<Int> {
         return questionProgressRepo.getProgressByQuestionId(questionId)
-    }
-
-    suspend fun clearQuestionProgressDataByQuestions(questionList: MutableList<Question>) {
-        questionProgressRepo.clearQuestionProgressDataByQuestions(questionList)
     }
 
     //TopicProgress Queries

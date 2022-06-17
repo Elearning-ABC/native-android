@@ -8,35 +8,32 @@ import com.alva.codedelaroute.repositories.SqlRepo
 class TopicViewModel : ViewModel() {
 
     var mainTopics = mutableListOf<Topic>()
+    private var allTopic = mutableListOf<Topic>()
 
     init {
+        allTopic = SqlRepo.getAllTopic()
         mainTopics = getMainTopic()
+
     }
 
-    fun getMainTopic(): MutableList<Topic> {
-        val result = SqlRepo.getTopicsByParentId(5681717746597888)
+    private fun getMainTopic(): MutableList<Topic> {
+        val result = allTopic.filter { it.parentId == "5681717746597888" }.toMutableList()
         result.sortBy { it.orderIndex }
         return result
     }
 
     fun getSubTopic(parentId: Long): MutableList<Topic> {
-        val lists = SqlRepo.getTopicsByParentId(parentId)
+        val lists = allTopic.filter { it.parentId == "$parentId" }.toMutableList()
         lists.sortBy { it.orderIndex }
         return lists
     }
 
     fun getTopicById(id: Long): Topic {
-        return SqlRepo.getTopicById(id)
+        return allTopic.first { it.id == "$id" }
     }
 
     fun getTopicProgressByTopicId(topicId: Long): TopicProgress {
         return SqlRepo.getTopicProgressByTopicId(topicId)
-    }
-
-    private suspend fun addOrUpdateTopicProgressToRepo(
-        topicProgress: TopicProgress,
-    ) {
-        SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress)
     }
 
     fun checkFinishedTopic(topicId: String): Boolean {
@@ -61,18 +58,22 @@ class TopicViewModel : ViewModel() {
                     break
                 } else tmpOrderIndex++
             }
-            //result = firstResults.first { it.orderIndex == (currentTopic.orderIndex + 1) }.id
         }
         return result
+    }
 
-//        else {
-//            return null
-//            val secondResults = SqlRepo.getTopicsByParentId(5681717746597888).sortedBy { it.orderIndex }
-//            val currentParentTopic = getTopicById(currentTopic.parentId.toLong())
-//            if(secondResults.last().orderIndex > currentParentTopic.orderIndex) {
-//                val parentTopicResultId = secondResults.filter { it.orderIndex == (currentParentTopic.orderIndex + 1) }[0].parentId
-//                SqlRepo.getTopicsByParentId(parentTopicResultId.toLong()).sortedBy { it.orderIndex }[0].id
-//            } else null
-//        }
+    fun getContinueTopic(): Topic? {
+        var result: Topic? = null
+        for (topic in mainTopics.sortedBy { it.orderIndex }) {
+            val firstResults = getSubTopic(topic.id.toLong()).sortedBy { it.orderIndex }
+            for (subTopic in firstResults) {
+                if (!checkFinishedTopic(subTopic.id)) {
+                    result = subTopic
+                    break
+                }
+            }
+            if (result != null) break
+        }
+        return result
     }
 }

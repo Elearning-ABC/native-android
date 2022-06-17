@@ -3,8 +3,6 @@ package com.alva.codedelaroute.view_models
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.ViewModelStoreOwner
 import com.alva.codedelaroute.models.Answer
 import com.alva.codedelaroute.models.Question
 import com.alva.codedelaroute.models.QuestionProgress
@@ -12,11 +10,12 @@ import com.alva.codedelaroute.models.TopicProgress
 import com.alva.codedelaroute.utils.AnswerStatus
 import io.realm.kotlin.ext.toRealmList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 class AnswerViewModel : ViewModel() {
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun onAnswerClickHandler(
         answer: Answer,
         question: Question,

@@ -11,16 +11,24 @@ import androidx.navigation.navArgument
 import com.alva.codedelaroute.screens.child_topic_list_screen.ChildTopicListScreen
 import com.alva.codedelaroute.screens.home_screen.HomeScreen
 import com.alva.codedelaroute.screens.finish_topic_screen.FinishTopicScreen
+import com.alva.codedelaroute.screens.onboarding_screen.OnboardingScreen
 import com.alva.codedelaroute.screens.question_screen.QuestionScreen
 import com.alva.codedelaroute.screens.question_screen.ReviewQuestionScreen
 import com.alva.codedelaroute.screens.review_list_screen.ReviewListScreen
+import com.alva.codedelaroute.screens.splash_screen.SplashScreen
 import com.alva.codedelaroute.utils.ReviewQuestionProperty
 
 @ExperimentalComposeUiApi
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Routes.HomeScreen.name) {
+    NavHost(navController = navController, startDestination = Routes.SplashScreen.name) {
+        composable(Routes.SplashScreen.name) {
+            SplashScreen(navController)
+        }
+        composable(Routes.OnBoardingScreen.name) {
+            OnboardingScreen(navController)
+        }
         composable(
             Routes.HomeScreen.name
         ) {

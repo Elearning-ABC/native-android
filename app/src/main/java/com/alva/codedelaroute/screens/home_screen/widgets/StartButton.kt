@@ -1,4 +1,4 @@
-package com.alva.codedelaroute.screens.practice_screen.widgets
+package com.alva.codedelaroute.screens.home_screen.widgets
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,14 +18,29 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.alva.codedelaroute.navigations.Routes
+import com.alva.codedelaroute.view_models.TopicViewModel
 
 
 @Composable
-fun StartButton(modifier: Modifier = Modifier) {
+fun StartButton(
+    modifier: Modifier = Modifier, topicViewModel: TopicViewModel = viewModel(
+        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
+    ), navController: NavController
+) {
     FilledTonalButton(modifier = modifier.shadow(10.dp, RoundedCornerShape(corner = CornerSize(12.dp))),
         shape = RoundedCornerShape(corner = CornerSize(12.dp)),
         contentPadding = PaddingValues(),
-        onClick = { }) {
+        onClick = {
+            val continueTopic = topicViewModel.getContinueTopic()
+            if (continueTopic != null) {
+                navController.navigate(Routes.ChildTopicListScreen.name + "/${continueTopic.parentId}")
+                navController.navigate(Routes.QuestionScreen.name + "/${continueTopic.id}")
+            }
+        }) {
         Box(
             modifier = Modifier.background(Brush.radialGradient(listOf(Color(0xffFF6767), Color(0xffED2939))))
                 .padding(horizontal = 16.dp, vertical = 16.dp).fillMaxWidth(), contentAlignment = Alignment.Center

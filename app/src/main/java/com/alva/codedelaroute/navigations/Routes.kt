@@ -1,6 +1,8 @@
 package com.alva.codedelaroute.navigations
 
 enum class Routes {
+    SplashScreen,
+    OnBoardingScreen,
     HomeScreen,
     ChildTopicListScreen,
     QuestionScreen,
@@ -10,6 +12,8 @@ enum class Routes {
 
     companion object {
         fun fromRoute(route: String?): Routes = when (route?.substringBefore(delimiter = "/")) {
+            SplashScreen.name -> SplashScreen
+            OnBoardingScreen.name -> OnBoardingScreen
             HomeScreen.name -> HomeScreen
             ChildTopicListScreen.name -> ChildTopicListScreen
             QuestionScreen.name -> QuestionScreen

@@ -26,7 +26,7 @@ import kotlinx.coroutines.*
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun MainBottomBar(
-    navController: NavController, selectedItemState: PagerState
+    selectedItemState: PagerState
 ) {
     val coroutineScope = rememberCoroutineScope()
     val navigationBarItemDefaultColors = NavigationBarItemDefaults.colors(

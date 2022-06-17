@@ -4,8 +4,9 @@ import com.alva.codedelaroute.models.Topic
 import io.realm.kotlin.Realm
 
 class TopicRepo(val realm: Realm) {
-    fun getTopicsByParentId(parentId: Long): MutableList<Topic> {
-        val results = realm.query(Topic::class, "parentId = '$parentId'").find()
+
+    fun getAllTopic(): MutableList<Topic> {
+        val results = realm.query(Topic::class).find()
         return results.toMutableList()
     }
 
