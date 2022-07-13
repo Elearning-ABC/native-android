@@ -1,7 +1,5 @@
 package com.alva.codedelaroute.screens.review_list_screen
 
-import android.graphics.BitmapFactory
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -17,13 +15,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -33,16 +29,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.alva.codedelaroute.R
-import com.alva.codedelaroute.models.Answer
-import com.alva.codedelaroute.models.Question
+import com.alva.codedelaroute.models.UIAnswer
+import com.alva.codedelaroute.models.UIQuestion
 import com.alva.codedelaroute.navigations.Routes
 import com.alva.codedelaroute.screens.review_list_screen.widgets.ReviewButton
 import com.alva.codedelaroute.utils.ReviewQuestionProperty
 import com.alva.codedelaroute.view_models.QuestionViewModel
+import com.alva.codedelaroute.widgets.CustomToast
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.systemBarsPadding
 import kotlinx.coroutines.runBlocking
@@ -52,17 +48,13 @@ import java.io.IOException
 fun ReviewListScreen(
     navController: NavController,
     reviewQuestionProperty: ReviewQuestionProperty,
-    questionViewModel: QuestionViewModel = viewModel(
-        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
-    )
+    questionViewModel: QuestionViewModel = viewModel()
 ) {
     val questionListByReviewQuestionProperty = when (reviewQuestionProperty) {
         ReviewQuestionProperty.YourFavoriteQuestions -> questionViewModel.getAllFavoriteQuestions()
-        ReviewQuestionProperty.AllFamiliarQuestions -> questionViewModel.getAllAnsweredQuestion()
+        ReviewQuestionProperty.AllFamiliarQuestions -> questionViewModel.getAllFamiliarQuestionsList()
         else -> questionViewModel.getQuestionListByReviewProperty(reviewQuestionProperty)
     }
-
-    val context = LocalContext.current
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -91,37 +83,15 @@ fun ReviewListScreen(
                     )
                 }) { innerPadding ->
                 Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-                    LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(items = questionListByReviewQuestionProperty) { item ->
-                            val showAnswer = rememberSaveable { mutableStateOf(false) }
-                            val progressList = questionViewModel.getProgressByQuestionId(item.id.toLong())
-                            val imageBitmap = remember { mutableStateOf<ImageBitmap?>(null) }
-                            val choices = item.choices.shuffled()
-
-                            try {
-                                with(context.assets.open("images/${item.image}")) {
-                                    imageBitmap.value = BitmapFactory.decodeStream(this).asImageBitmap()
-                                }
-                            } catch (e: IOException) {
-                                imageBitmap.value = null
-                            }
-
-                            ReviewItemCard(
-                                showAnswer = showAnswer,
-                                progressList = progressList,
-                                item = item,
-                                imageBitmap = imageBitmap,
-                                choices = choices,
-                                questionViewModel = questionViewModel,
-                                questionId = item.id
-                            )
-                        }
-                        item {
-                            Spacer(modifier = Modifier.size(50.dp))
-                        }
-                    }
+                    ReviewPanel(
+                        modifier = Modifier.weight(1f),
+                        questionList = questionListByReviewQuestionProperty,
+                        showAnswerInitialValue = false
+                    )
                     ReviewButton(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp)) {
-                        navController.navigate(Routes.ReviewQuestionScreen.name + "/$reviewQuestionProperty")
+                        navController.navigate(
+                            Routes.ReviewGameScreen.name + "/${reviewQuestionProperty.name}",
+                        )
                     }
                 }
             }
@@ -130,26 +100,73 @@ fun ReviewListScreen(
 }
 
 @Composable
+fun ReviewPanel(
+    modifier: Modifier = Modifier,
+    questionList: MutableList<UIQuestion>,
+    showAnswerInitialValue: Boolean,
+    questionViewModel: QuestionViewModel = viewModel(),
+) {
+
+    val context = LocalContext.current
+
+    LazyColumn(modifier = modifier) {
+        items(items = questionList) { item ->
+            val showAnswer = rememberSaveable { mutableStateOf(showAnswerInitialValue) }
+            val progressList = questionViewModel.getProgressByQuestionId(item.id.toLong())
+            val imageBitmap = remember { mutableStateOf<ImageBitmap?>(null) }
+            val choices = item.choices.shuffled()
+
+            try {
+                with(context.assets.open("images/${item.image}")) {
+                    imageBitmap.value = android.graphics.BitmapFactory.decodeStream(this).asImageBitmap()
+                }
+            } catch (e: IOException) {
+                imageBitmap.value = null
+            }
+
+            ReviewItemCard(
+                showAnswer = showAnswer,
+                progressList = progressList,
+                item = item,
+                imageBitmap = imageBitmap,
+                choices = choices,
+                questionViewModel = questionViewModel,
+                questionId = item.id,
+            )
+        }
+        item {
+            Spacer(modifier = Modifier.size(50.dp))
+        }
+    }
+}
+
+@Composable
 fun ReviewItemCard(
     showAnswer: MutableState<Boolean>,
     progressList: MutableList<Int>,
-    item: Question,
+    item: UIQuestion,
     imageBitmap: MutableState<ImageBitmap?>,
-    choices: List<Answer>,
+    choices: List<UIAnswer>,
     questionViewModel: QuestionViewModel,
-    questionId: String
+    questionId: String,
 ) {
     val questionProgress =
-        questionViewModel.getQuestionProgressByQuestionId(questionId.toLong(), isInReviewScreen = true)
+        questionViewModel.getQuestionProgressByQuestionId(questionId.toLong(), isForChecking = true)
 
     val bookmark = remember { mutableStateOf(questionProgress.bookmark) }
 
     val context = LocalContext.current
 
     Card(
-        modifier = Modifier.padding(top = 16.dp, start = 24.dp, end = 24.dp).fillMaxWidth().clickable {
+        modifier = Modifier.padding(top = 16.dp, start = 24.dp, end = 24.dp).fillMaxWidth().shadow(
+            elevation = 10.dp,
+            shape = RoundedCornerShape(corner = CornerSize(8.dp)),
+            ambientColor = Color(0xff002395).copy(alpha = 0.3f),
+            spotColor = Color(0xff002395).copy(alpha = 0.3f),
+        ).clickable {
             showAnswer.value = !showAnswer.value
-        }, shape = RoundedCornerShape(corner = CornerSize(8.dp)), backgroundColor = Color.White, elevation = 5.dp
+        },
+        shape = RoundedCornerShape(corner = CornerSize(8.dp)), backgroundColor = Color.White,
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.Top) {
@@ -178,12 +195,27 @@ fun ReviewItemCard(
                     modifier = Modifier.clickable {
                         runBlocking {
                             bookmark.value = !bookmark.value
-                            questionProgress.bookmark = !questionProgress.bookmark
-                            questionViewModel.addOrUpdateQuestionProgressToRepo(questionProgress)
+                            questionViewModel.saveBookmarkToRepo(
+                                questionProgress.questionId.toLong(),
+                                questionProgress.topicId.toLong(),
+                                boolean = bookmark.value
+                            )
                             if (bookmark.value) {
-                                Toast.makeText(context, "Added to your favorite", Toast.LENGTH_SHORT).show()
+                                CustomToast.showToast(
+                                    context = context,
+                                    message = "Added to favorites!",
+                                    icon = R.drawable.check_circle,
+                                    textColor = R.color.toast_success_text_color,
+                                    toastBackgroundColor = R.color.toast_success_background_color,
+                                )
                             } else {
-                                Toast.makeText(context, "Remove from your favorite", Toast.LENGTH_SHORT).show()
+                                CustomToast.showToast(
+                                    context = context,
+                                    message = "Removed from favorites!",
+                                    icon = R.drawable.check_circle,
+                                    textColor = R.color.toast_success_text_color,
+                                    toastBackgroundColor = R.color.toast_success_background_color,
+                                )
                             }
                         }
                     })

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:id="@+id/toast_custom"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:background="@drawable/rect_curved_button"
+              android:backgroundTint="@color/black"
+              android:gravity="center"
+              android:minWidth="100dp"
+              android:minHeight="30dp"
+              android:padding="10dp">
+    <ImageView
+            android:id="@+id/icon_src"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/check_circle"
+            android:contentDescription="null"/>
+
+
+    <TextView
+            android:id="@+id/text_toast"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:paddingLeft="30dp"
+            android:paddingRight="30dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"
+            tools:text="custom toast"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+    />
+
+</LinearLayout>

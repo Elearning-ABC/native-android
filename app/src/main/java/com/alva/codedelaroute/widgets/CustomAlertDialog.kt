@@ -1,4 +1,4 @@
-@file:OptIn(DelicateCoroutinesApi::class)
+@file:OptIn(DelicateCoroutinesApi::class, ExperimentalComposeUiApi::class)
 
 package com.alva.codedelaroute.widgets
 
@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -19,6 +20,7 @@ import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.alva.codedelaroute.navigations.Routes
+import com.alva.codedelaroute.utils.PoppinsFont
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.view_models.TopicViewModel
 import kotlinx.coroutines.*
@@ -38,11 +40,14 @@ fun CustomAlertDialog(
             openDialog.value = false
         },
         properties = DialogProperties(
-            dismissOnBackPress = true, dismissOnClickOutside = true, securePolicy = SecureFlagPolicy.SecureOn
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+            securePolicy = SecureFlagPolicy.SecureOn,
+            usePlatformDefaultWidth = false
         ),
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+            modifier = Modifier.padding(30.dp).fillMaxWidth().wrapContentHeight(),
             shape = RoundedCornerShape(corner = CornerSize(16.dp)),
         ) {
             Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
@@ -54,6 +59,7 @@ fun CustomAlertDialog(
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp,
                     lineHeight = 28.sp,
+                    fontFamily = PoppinsFont,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.size(32.dp))
@@ -62,6 +68,7 @@ fun CustomAlertDialog(
                     color = Color.Black,
                     fontSize = 16.sp,
                     lineHeight = 26.sp,
+                    fontFamily = PoppinsFont,
                     textAlign = TextAlign.Center,
                     letterSpacing = 0.32.sp
                 )
@@ -73,14 +80,14 @@ fun CustomAlertDialog(
                         onClick = { buttonCancelClick() },
                         modifier = Modifier.padding(end = 6.dp).weight(1f)
                     ) {
-                        Text(buttonCancelTitle)
+                        Text(buttonCancelTitle, fontFamily = PoppinsFont)
                     }
                     OutlinedButton(
                         shape = RoundedCornerShape(corner = CornerSize(12.dp)), colors = ButtonDefaults.buttonColors(
                             backgroundColor = Color(0xFF002395), contentColor = Color.White
                         ), onClick = { buttonAcceptClick() }, modifier = Modifier.padding(start = 6.dp).weight(1f)
                     ) {
-                        Text(buttonAcceptTitle)
+                        Text(buttonAcceptTitle, fontFamily = PoppinsFont)
                     }
                 }
             }

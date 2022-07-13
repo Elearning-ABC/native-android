@@ -1,38 +1,37 @@
 package com.alva.codedelaroute.view_models
 
 import androidx.lifecycle.ViewModel
-import com.alva.codedelaroute.models.Topic
-import com.alva.codedelaroute.models.TopicProgress
+import com.alva.codedelaroute.models.UITopic
+import com.alva.codedelaroute.models.UITopicProgress
 import com.alva.codedelaroute.repositories.SqlRepo
 
 class TopicViewModel : ViewModel() {
 
-    var mainTopics = mutableListOf<Topic>()
-    private var allTopic = mutableListOf<Topic>()
+    var mainTopics = mutableListOf<UITopic>()
+    private var allTopic = mutableListOf<UITopic>()
 
     init {
         allTopic = SqlRepo.getAllTopic()
         mainTopics = getMainTopic()
-
     }
 
-    private fun getMainTopic(): MutableList<Topic> {
-        val result = allTopic.filter { it.parentId == "5681717746597888" }.toMutableList()
+    private fun getMainTopic(): MutableList<UITopic> {
+        val result = allTopic.filter { it.parentId == SqlRepo.getTopParentId() && it.status == 1 }.toMutableList()
         result.sortBy { it.orderIndex }
         return result
     }
 
-    fun getSubTopic(parentId: Long): MutableList<Topic> {
-        val lists = allTopic.filter { it.parentId == "$parentId" }.toMutableList()
+    fun getSubTopic(parentId: Long): MutableList<UITopic> {
+        val lists = allTopic.filter { it.parentId == "$parentId" && it.status == 1 }.toMutableList()
         lists.sortBy { it.orderIndex }
         return lists
     }
 
-    fun getTopicById(id: Long): Topic {
+    fun getTopicById(id: Long): UITopic {
         return allTopic.first { it.id == "$id" }
     }
 
-    fun getTopicProgressByTopicId(topicId: Long): TopicProgress {
+    fun getTopicProgressByTopicId(topicId: Long): UITopicProgress {
         return SqlRepo.getTopicProgressByTopicId(topicId)
     }
 
@@ -46,7 +45,7 @@ class TopicViewModel : ViewModel() {
         SqlRepo.clearSubTopicProgressData(subTopicId, parentTopicId)
     }
 
-    fun getNextTopicId(currentTopic: Topic): String? {
+    fun getNextTopicId(currentTopic: UITopic): String? {
         var result: String? = null
         val firstResults = getSubTopic(currentTopic.parentId.toLong()).sortedBy { it.orderIndex }
         if (firstResults.last().orderIndex > currentTopic.orderIndex) {
@@ -62,8 +61,8 @@ class TopicViewModel : ViewModel() {
         return result
     }
 
-    fun getContinueTopic(): Topic? {
-        var result: Topic? = null
+    fun getContinueTopic(): UITopic? {
+        var result: UITopic? = null
         for (topic in mainTopics.sortedBy { it.orderIndex }) {
             val firstResults = getSubTopic(topic.id.toLong()).sortedBy { it.orderIndex }
             for (subTopic in firstResults) {

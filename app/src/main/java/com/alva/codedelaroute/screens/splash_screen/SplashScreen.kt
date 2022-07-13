@@ -11,25 +11,26 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.datastore.core.DataStore
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NavController
 
 import com.alva.codedelaroute.R
 import com.alva.codedelaroute.navigations.Routes
-import com.alva.codedelaroute.view_models.FirstLaunchAppViewModel
-import com.alva.codedelaroute.view_models.OnStartViewModel
+import com.alva.codedelaroute.view_models.AppConfigurationViewModel
+import com.alva.codedelaroute.view_models.QuestionViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(navController: NavController) {
+fun SplashScreen(
+    navController: NavController, questionViewModel: QuestionViewModel = viewModel()
+) {
     val context = LocalContext.current
 
-    val dataStore = FirstLaunchAppViewModel(context)
+    val dataStore = AppConfigurationViewModel(context)
 
-    val isFirstLaunch = dataStore.getBool.collectAsState(true)
+    val isFirstLaunch = dataStore.getIsFirstLaunchApp.collectAsState(true)
 
     val startAnim = remember { mutableStateOf(false) }
 

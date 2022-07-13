@@ -16,3 +16,27 @@ enum class ReviewQuestionProperty {
     YourFavoriteQuestions,
     None
 }
+
+enum class GameType {
+    Practice,
+    Test,
+    Review
+}
+
+enum class TestSetting {
+    Easy,
+    Medium,
+    Hardest
+}
+
+enum class TestStatus {
+    None,
+    Playing,
+    Done
+}
+
+enum class TestIconStatus {
+    None,
+    Passed,
+    Failed
+}

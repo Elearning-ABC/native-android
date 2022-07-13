@@ -7,4 +7,13 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="toast_success_background_color">#BFE7D9</color>
+    <color name="toast_success_text_color">#238461</color>
+
+    <color name="toast_error_background_color">#F1BFBD</color>
+    <color name="toast_error_text_color">#AF4946</color>
+
+    <color name="toast_alert_background_color">#E8D3A9</color>
+    <color name="toast_alert_text_color">#C28C21</color>
 </resources>

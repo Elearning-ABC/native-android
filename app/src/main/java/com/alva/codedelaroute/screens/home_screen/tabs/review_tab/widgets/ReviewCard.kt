@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -44,10 +45,14 @@ fun ReviewCard(
     }
 
     Card(
-        modifier = modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp).fillMaxWidth(),
+        modifier = modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp).fillMaxWidth().shadow(
+            elevation = 10.dp,
+            shape = RoundedCornerShape(corner = CornerSize(8.dp)),
+            ambientColor = Color(0xff002395).copy(alpha = 0.3f),
+            spotColor = Color(0xff002395).copy(alpha = 0.3f),
+        ),
         shape = RoundedCornerShape(corner = CornerSize(8.dp)),
         backgroundColor = Color.White,
-        elevation = 10.dp
     ) {
 
         Column(
@@ -57,9 +62,9 @@ fun ReviewCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    cardTitle, style = TextStyle(
-                        color = TitleCardColor, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, lineHeight = 32.sp
-                    ), modifier = Modifier.weight(1f)
+                    cardTitle,
+                    color = TitleCardColor, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, lineHeight = 32.sp,
+                    modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.size(16.dp))
                 Box(

@@ -1,26 +1,25 @@
+@file:OptIn(ExperimentalComposeUiApi::class)
+
 package com.alva.codedelaroute
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.core.view.WindowCompat
 import com.alva.codedelaroute.navigations.AppNavigation
-import com.alva.codedelaroute.repositories.SqlRepo
-import com.alva.codedelaroute.ui.theme.CodeDeLaRouteTheme
+import com.alva.codedelaroute.utils.CodeDeLaRouteTheme
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 
-@ExperimentalComposeUiApi
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        copyBundledRealmFile(applicationContext.resources.openRawResource(R.raw.db), "default.realm")
+        copyBundledRealmFile(applicationContext.resources.openRawResource(R.raw.asvab), "default.realm")
         setContent {
             MyApp {
                 AppNavigation()
@@ -28,7 +27,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun copyBundledRealmFile(inputStream: InputStream, outFileName: String): String? {
+    private fun copyBundledRealmFile(inputStream: InputStream, outFileName: String): String? {
         try {
             val file = File(this.filesDir, outFileName)
             return if (!file.exists()) {
@@ -50,7 +49,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MyApp(content: @Composable () -> Unit) {
-    content()
+    CodeDeLaRouteTheme(darkTheme = false) {
+        content()
+    }
 }
-
-

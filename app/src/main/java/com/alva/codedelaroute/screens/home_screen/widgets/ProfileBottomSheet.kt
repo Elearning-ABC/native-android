@@ -30,11 +30,10 @@ import com.google.accompanist.insets.navigationBarsWithImePadding
 @Preview(showBackground = true)
 @Composable
 fun ProfileBottomSheet() {
-    val focusRequester = remember { FocusRequester() }
     val email = remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier.padding(horizontal = 24.dp, vertical = 32.dp).navigationBarsWithImePadding(),
+        modifier = Modifier.padding(horizontal = 24.dp, vertical = 32.dp).imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -65,18 +64,10 @@ fun ProfileBottomSheet() {
             placeholder = { Text("Type your email") },
             colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.Transparent),
             modifier = Modifier.fillMaxWidth()
-                .focusRequester(focusRequester),
         )
-        LaunchedEffect(true) {
-            focusRequester.requestFocus()
-        }
-
         Spacer(modifier = Modifier.height(50.dp))
         Text(
-            "By signing in your accept our",
-            fontSize = 14.sp,
-            lineHeight = 18.sp,
-            color = Color(0xFF575758)
+            "By signing in your accept our", fontSize = 14.sp, lineHeight = 18.sp, color = Color(0xFF575758)
         )
         Spacer(modifier = Modifier.height(5.dp))
         Text(

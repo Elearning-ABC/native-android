@@ -1,4 +1,4 @@
-package com.alva.codedelaroute.ui.theme
+package com.alva.codedelaroute.utils
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
@@ -6,10 +6,8 @@ import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.alva.codedelaroute.utils.Purple200
-import com.alva.codedelaroute.utils.Purple500
-import com.alva.codedelaroute.utils.Purple700
-import com.alva.codedelaroute.utils.Teal200
+import com.alva.codedelaroute.ui.theme.Shapes
+import com.alva.codedelaroute.utils.Typography
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 private val DarkColorPalette = darkColors(
@@ -44,12 +42,12 @@ fun CodeDeLaRouteTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Com
     val systemUiController = rememberSystemUiController()
     if (darkTheme) {
         systemUiController.setSystemBarsColor(
-            color = Color.Transparent,
+            color = Color.Gray.copy(alpha = 0.3f),
             darkIcons = true
         )
     } else {
         systemUiController.setSystemBarsColor(
-            color = Color.Transparent,
+            color = Color.Gray.copy(alpha = 0.3f),
             darkIcons = true
         )
     }

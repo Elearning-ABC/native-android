@@ -4,7 +4,6 @@ package com.alva.codedelaroute.screens.home_screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -15,25 +14,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
 import com.alva.codedelaroute.R
-import com.alva.codedelaroute.screens.home_screen.widgets.StartButton
+import com.alva.codedelaroute.screens.home_screen.widgets.HomeStartButton
 import com.alva.codedelaroute.screens.home_screen.tabs.practice_tab.PracticeTab
 import com.alva.codedelaroute.screens.home_screen.tabs.review_tab.ReviewTab
 import com.alva.codedelaroute.screens.home_screen.tabs.test_tab.TestTab
-import com.alva.codedelaroute.screens.home_screen.widgets.CommonAppBar
+import com.alva.codedelaroute.screens.home_screen.widgets.HomeAppBar
 import com.alva.codedelaroute.screens.home_screen.widgets.MenuBottomSheet
 import com.alva.codedelaroute.screens.home_screen.widgets.ProfileBottomSheet
-import com.alva.codedelaroute.view_models.FirstLaunchAppViewModel
-import com.alva.codedelaroute.view_models.QuestionViewModel
-import com.alva.codedelaroute.widgets.MainBottomBar
-import com.alva.codedelaroute.widgets.ProgressPanel
+import com.alva.codedelaroute.view_models.AppConfigurationViewModel
+import com.alva.codedelaroute.screens.home_screen.widgets.HomeBottomBar
+import com.alva.codedelaroute.screens.home_screen.widgets.HomeProgressPanel
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.systemBarsPadding
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -46,11 +44,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     navController: NavController = rememberNavController(),
-    questionViewModel: QuestionViewModel = viewModel(
-        viewModelStoreOwner = LocalViewModelStoreOwner.current!!
-    )
 ) {
-    val bottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden,
+    val bottomSheetState = rememberModalBottomSheetState(
+        initialValue = ModalBottomSheetValue.Hidden,
         confirmStateChange = { it != ModalBottomSheetValue.HalfExpanded })
 
     val pagerState = rememberPagerState(initialPage = 0)
@@ -59,14 +55,23 @@ fun HomeScreen(
 
     val context = LocalContext.current
 
-    val dataStore = FirstLaunchAppViewModel(context)
+    val dataStore = AppConfigurationViewModel(context)
 
     val coroutine = rememberCoroutineScope()
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(bottomSheetState) {
+        snapshotFlow { bottomSheetState.isVisible }.collect { isVisible ->
+            if (!isVisible) {
+                keyboardController?.hide()
+            }
+        }
+    }
+
     LaunchedEffect(true) {
         coroutine.launch {
-            dataStore.saveBool(false)
-            questionViewModel.initQuestionProgressList()
+            dataStore.saveIsFirstLaunchApp(false)
         }
     }
 
@@ -88,25 +93,30 @@ fun HomeScreen(
                 sheetElevation = 10.dp,
             ) {
                 Scaffold(topBar = {
-                    CommonAppBar(bottomSheetState) {
-                        bottomSheetName.value = it
+                    HomeAppBar {
+                        coroutine.launch {
+                            bottomSheetName.value = it
+                            if (!bottomSheetState.isVisible) {
+                                bottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
+                            } else {
+                                bottomSheetState.animateTo(ModalBottomSheetValue.Hidden)
+                            }
+                        }
                     }
                 }, backgroundColor = Color.Transparent, contentColor = Color.Transparent, bottomBar = {
-                    MainBottomBar(pagerState)
+                    HomeBottomBar(pagerState)
                 }, modifier = Modifier.fillMaxHeight()
                 ) { innerPadding ->
                     Column(modifier = Modifier.padding(innerPadding).fillMaxHeight()) {
-                        ProgressPanel()
-                        StartButton(
-                            Modifier.padding(horizontal = 47.dp, vertical = 16.dp),
-                            navController = navController
+                        HomeProgressPanel()
+                        HomeStartButton(
+                            Modifier.padding(horizontal = 47.dp, vertical = 16.dp), navController = navController
                         )
                         Box(modifier = Modifier.weight(1f)) {
                             HorizontalPager(
                                 count = 3,
                                 state = pagerState,
                                 verticalAlignment = Alignment.Top,
-                                flingBehavior = ScrollableDefaults.flingBehavior()
                             ) { index ->
                                 when (index) {
                                     0 -> PracticeTab(navController)

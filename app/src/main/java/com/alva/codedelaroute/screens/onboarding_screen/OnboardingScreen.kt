@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 import com.alva.codedelaroute.R
 import com.alva.codedelaroute.navigations.Routes
@@ -88,7 +89,7 @@ fun OnboardingScreen(
         }
         Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.weight(1f))
-            HorizontalPagerIndicator(pagerState, activeColor = Color(0xFF0B2EA0), inactiveColor = Color.White)
+            HorizontalPagerIndicator(pagerState, activeColor = Color(0xFF0B2EA0), inactiveColor = Color(0xffD7DDF3))
             Spacer(modifier = Modifier.height(100.dp))
         }
     }

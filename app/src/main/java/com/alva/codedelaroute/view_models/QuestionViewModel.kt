@@ -1,350 +1,203 @@
-@file:OptIn(DelicateCoroutinesApi::class)
-
 package com.alva.codedelaroute.view_models
 
 import androidx.lifecycle.ViewModel
-import com.alva.codedelaroute.models.Question
-import com.alva.codedelaroute.models.QuestionProgress
-import com.alva.codedelaroute.models.TopicProgress
+import androidx.lifecycle.viewModelScope
+import com.alva.codedelaroute.models.UIQuestion
+import com.alva.codedelaroute.models.UIQuestionProgress
+import com.alva.codedelaroute.models.UITestProgress
 import com.alva.codedelaroute.repositories.SqlRepo
-import com.alva.codedelaroute.utils.AnswerStatus
+import com.alva.codedelaroute.utils.GameType
 import com.alva.codedelaroute.utils.ReviewQuestionProperty
 import io.realm.kotlin.ext.realmListOf
-import io.realm.kotlin.ext.toRealmList
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class QuestionViewModel : ViewModel() {
-    private var allQuestionProgressList: MutableList<QuestionProgress> = mutableListOf()
+    private var allQuestionProgressList: MutableList<UIQuestionProgress> = mutableListOf()
+
+    val weakQuestionsCount = MutableStateFlow(0)
+    val mediumQuestionsCount = MutableStateFlow(0)
+    val strongQuestionsCount = MutableStateFlow(0)
+    val allAnsweredQuestionsCount = MutableStateFlow(0)
+    val favoriteQuestionsCount = MutableStateFlow(0)
 
     init {
         allQuestionProgressList = SqlRepo.getAllQuestionProgress()
+        updateAllFamiliarQuestionsCount()
+        updateQuestionListCountByReviewProperty(ReviewQuestionProperty.WeakQuestions)
+        updateQuestionListCountByReviewProperty(ReviewQuestionProperty.MediumQuestions)
+        updateQuestionListCountByReviewProperty(ReviewQuestionProperty.StrongQuestions)
+        updateFavoriteQuestionsCount()
     }
 
-    fun initQuestionProgressList() {
-        allQuestionProgressList = SqlRepo.getAllQuestionProgress()
-    }
-
-    fun getEmptyQuestionProgressListProgress(questions: MutableList<Question>): MutableList<QuestionProgress> {
-        val list = mutableListOf<QuestionProgress>()
+    fun getEmptyQuestionProgressListProgress(questions: MutableList<UIQuestion>): MutableList<UIQuestionProgress> {
+        val list = mutableListOf<UIQuestionProgress>()
         for (question in questions) {
-            val tmp = QuestionProgress()
             val questionProgressInDb = getQuestionProgressByQuestionId(
-                question.id.toLong(), isInReviewScreen = true
-            )
-            tmp.apply {
-                id = questionProgressInDb.id
-                questionId = questionProgressInDb.questionId
-                progress = questionProgressInDb.progress
-                topicId = questionProgressInDb.topicId
-                lastUpdate = System.currentTimeMillis().toDouble()
-                choiceSelectedIds = realmListOf()
+                question.id.toLong(), question.parentId.toLong(), isForChecking = true
+            ).apply {
+                choiceSelectedIds = mutableListOf()
                 boxNum = 0
-                bookmark = questionProgressInDb.bookmark
             }
-            list.add(tmp)
+            list.add(questionProgressInDb)
         }
         return list
     }
 
-    fun getQuestionsByParentId(parentId: Long): MutableList<Question> {
+    fun getQuestionProgressForTest(
+        questions: MutableList<UIQuestion>, testProgress: UITestProgress
+    ): MutableList<UIQuestionProgress> {
+        val list = mutableListOf<UIQuestionProgress>()
+        for (question in questions) {
+            val questionProgressInDb = getQuestionProgressByQuestionId(
+                question.id.toLong(), question.parentId.toLong(), isForChecking = true
+            ).apply {
+                choiceSelectedIds = mutableListOf()
+                boxNum = 0
+            }
+            list.add(questionProgressInDb)
+        }
+        if (testProgress.answeredQuestion.isNotEmpty()) {
+            testProgress.answeredQuestion.forEach { testQuestionChoice ->
+                list.first { questionProgress -> questionProgress.questionId == testQuestionChoice.questionId }.choiceSelectedIds.addAll(
+                    testQuestionChoice.listChoice.map { it.id }.toMutableList()
+                )
+            }
+        }
+        return list
+    }
+
+    fun getQuestionsByParentId(parentId: Long): MutableList<UIQuestion> {
         return SqlRepo.getQuestionsByParentId(parentId)
     }
 
     fun getQuestionProgressByQuestionId(
-        questionId: Long,
-        topicId: Long = 0,
-        isInReviewScreen: Boolean = false
-    ): QuestionProgress {
-        val questionProgress = QuestionProgress()
+        questionId: Long, topicId: Long = 0, isForChecking: Boolean = false
+    ): UIQuestionProgress {
         try {
             val result = allQuestionProgressList.first { it.questionId == questionId.toString() }
 
-            if (!isInReviewScreen) {
-                val question = SqlRepo.getQuestionsByParentId(topicId).first { it.id == questionId.toString() }
-                return if (result.boxNum != 0 && question.choices.filter { it.isCorrect }.size == result.choiceSelectedIds.size) {
-                    questionProgress.questionId = result.questionId
-                    questionProgress.id = result.id
-                    questionProgress.topicId = result.topicId
-                    questionProgress.choiceSelectedIds = realmListOf()
-                    questionProgress.progress = result.progress
-                    questionProgress.boxNum = result.boxNum
-                    questionProgress.lastUpdate = result.lastUpdate
-                    questionProgress.bookmark = result.bookmark
-                    questionProgress.round = result.round
-                    questionProgress.stateId = result.stateId
-                    questionProgress.times = result.times
-                    questionProgress
-                } else {
-                    questionProgress.questionId = result.questionId
-                    questionProgress.id = result.id
-                    questionProgress.topicId = result.topicId
-                    questionProgress.choiceSelectedIds = realmListOf()
-                    questionProgress.progress = result.progress
-                    questionProgress.boxNum = 0
-                    questionProgress.lastUpdate = result.lastUpdate
-                    questionProgress.bookmark = result.bookmark
-                    questionProgress.round = result.round
-                    questionProgress.stateId = result.stateId
-                    questionProgress.times = result.times
-                    questionProgress
+            return if (!isForChecking) {
+                val question = getQuestionsByParentId(topicId).first { it.id == questionId.toString() }
+                if (result.choiceSelectedIds.size < question.correctAnswers.size) {
+                    result.copy()
+                } else result.copy().apply {
+                    choiceSelectedIds = mutableListOf()
                 }
             } else {
-                questionProgress.questionId = result.questionId
-                questionProgress.id = result.id
-                questionProgress.topicId = result.topicId
-                questionProgress.choiceSelectedIds = result.choiceSelectedIds
-                questionProgress.progress = result.progress
-                questionProgress.boxNum = result.boxNum
-                questionProgress.lastUpdate = result.lastUpdate
-                questionProgress.bookmark = result.bookmark
-                questionProgress.round = result.round
-                questionProgress.stateId = result.stateId
-                questionProgress.times = result.times
-                return questionProgress
+                result.copy()
             }
         } catch (e: NoSuchElementException) {
-            questionProgress.id = System.currentTimeMillis().toString()
-            questionProgress.questionId = questionId.toString()
-            questionProgress.topicId = topicId.toString()
-            questionProgress.lastUpdate = System.currentTimeMillis().toDouble()
-            return questionProgress
+            return UIQuestionProgress(
+                id = System.currentTimeMillis().toString(),
+                questionId = questionId.toString(),
+                topicId = topicId.toString(),
+                lastUpdate = System.currentTimeMillis().toDouble()
+            )
         }
     }
 
-    @DelicateCoroutinesApi
-    suspend fun addOrUpdateQuestionProgressToRepo(questionProgress: QuestionProgress) {
-        GlobalScope.launch {
-            try {
-                val result = allQuestionProgressList.first { it.questionId == questionProgress.questionId }
-
-                val tmp = QuestionProgress()
-                if (result.boxNum != 1) tmp.boxNum = questionProgress.boxNum else tmp.boxNum = result.boxNum
-                tmp.progress = questionProgress.progress
-                tmp.choiceSelectedIds = questionProgress.choiceSelectedIds
-                tmp.lastUpdate = System.currentTimeMillis().toDouble()
-                tmp.topicId = result.topicId
-                tmp.questionId = result.questionId
-                tmp.id = result.id
-                tmp.bookmark = questionProgress.bookmark
-                tmp.round = questionProgress.round
-                tmp.stateId = result.stateId
-                tmp.times = questionProgress.times
-
-                allQuestionProgressList.remove(result)
-                allQuestionProgressList.add(tmp)
-            } catch (e: NoSuchElementException) {
-                allQuestionProgressList.add(questionProgress)
-            }
-            SqlRepo.addOrUpdateQuestionProgressToRepo(questionProgress)
-        }
-    }
-
-    private fun getAnsweredQuestionsByTopicId(topicId: Long): MutableList<QuestionProgress> {
-        return allQuestionProgressList.filter { it.topicId == topicId.toString() }.toMutableList()
-    }
-
-    fun goToNextQuestion(
-        questionList: MutableList<Question>,
-        parentId: Long
-    ): Question {
-        //Pre-processing
-        val questionProgressList = getAnsweredQuestionsByTopicId(parentId)
-
-        val tmpList = mutableListOf<Question>()
-
-        tmpList.addAll(questionList)
-        for (questionProgress in questionProgressList) {
-            if (questionProgress.choiceSelectedIds.size < questionList.first { it.id == questionProgress.questionId }.correctAnswerNumber) return questionList.first { it.id == questionProgress.questionId }
-            if (questionProgress.boxNum != 0) tmpList.remove(tmpList.first { it.id == questionProgress.questionId })
-        }
-
-        //getQuestion
-        if (tmpList.size > 0) {
-            return tmpList.first()
-        } else {
-            questionProgressList.sortBy { it.lastUpdate }
-            val previousQuestionProgress = questionProgressList.last()
-            val failedQuestionList = questionProgressList.filter { it.boxNum == -1 }
-
-            return if (failedQuestionList.size == 1 && previousQuestionProgress.boxNum == -1) {
-                val successfulQuestionList = questionProgressList.filter { it.boxNum == 1 }
-                if (successfulQuestionList.isEmpty()) {
-                    questionList.first()
-                } else {
-                    val getRandomSuccessfulQuestion = successfulQuestionList.random()
-                    questionList.first { it.id == getRandomSuccessfulQuestion.questionId }
-                }
-            } else {
-                return if (failedQuestionList.isNotEmpty()) {
-                    val getRandomFailedQuestion = failedQuestionList.random()
-                    questionList.first { it.id == getRandomFailedQuestion.questionId }
-                } else {
-                    //No effective, just to prevent app from null pointer exception
-                    questionList.first()
-                }
-            }
-        }
-    }
-
-    fun goToNextReviewQuestion(
-        questionList: MutableList<Question>,
-        tempQuestionProgressList: MutableList<QuestionProgress>
-    ): Question {
-        val tmpList = mutableListOf<Question>()
-
-        tmpList.addAll(questionList)
-        for (questionProgress in tempQuestionProgressList) {
-            if (questionProgress.boxNum != 0) tmpList.remove(tmpList.first { it.id == questionProgress.questionId })
-        }
-
-        //getQuestion
-        if (tmpList.size > 0) {
-            return tmpList.first()
-        } else {
-            tempQuestionProgressList.sortBy { it.lastUpdate }
-            val previousQuestionProgress = tempQuestionProgressList.last()
-            val failedQuestionList = tempQuestionProgressList.filter { it.boxNum == -1 }
-
-            return if (failedQuestionList.size == 1 && previousQuestionProgress.boxNum == -1) {
-                val successfulQuestionList = tempQuestionProgressList.filter { it.boxNum == 1 }
-                if (successfulQuestionList.isEmpty()) {
-                    questionList.first()
-                } else {
-                    val getRandomSuccessfulQuestion = successfulQuestionList.random()
-                    questionList.first { it.id == getRandomSuccessfulQuestion.questionId }
-                }
-            } else {
-                return if (failedQuestionList.isNotEmpty()) {
-                    val getRandomFailedQuestion = failedQuestionList.random()
-                    questionList.first { it.id == getRandomFailedQuestion.questionId }
-                } else {
-                    //No effective, just to prevent app from null pointer exception
-                    questionList.first()
-                }
-            }
-        }
-    }
-
-    private fun isQuestionAnsweredTrue(questionId: Long, topicId: Long): Boolean {
-        val questionProgress = getQuestionProgressByQuestionId(questionId, topicId)
-        if (questionProgress.boxNum == 1) return true
-        return false
-    }
-
-    suspend fun onQuestionAnswerClick(
-        answerId: String,
-        currentQuestionProgress: QuestionProgress,
-        question: Question,
-        subTopicProgress: TopicProgress?,
-        mainTopicProgress: TopicProgress?
-    ) {
-        val tmp = QuestionProgress()
-        tmp.apply {
-            lastUpdate = currentQuestionProgress.lastUpdate
-            choiceSelectedIds = currentQuestionProgress.choiceSelectedIds
-            boxNum = currentQuestionProgress.boxNum
-            topicId = currentQuestionProgress.topicId
-            questionId = currentQuestionProgress.questionId
-            id = currentQuestionProgress.id
-            bookmark = currentQuestionProgress.bookmark
-            round = currentQuestionProgress.round
-            stateId = currentQuestionProgress.stateId
-            times = currentQuestionProgress.times
-        }
-        val progressList = currentQuestionProgress.progress.toMutableList()
-
-
-        if (!tmp.choiceSelectedIds.contains(answerId)) {
-            tmp.choiceSelectedIds.add(answerId)
-            if (isFinishQuestion(
-                    question, currentQuestionProgress = tmp
-                )
-            ) {
-                if (tmp.choiceSelectedIds.any { answerID -> !(question.choices.first { it.id == answerID }.isCorrect) }) {
-                    tmp.boxNum = -1
-                    progressList.add(-1)
-                } else {
-                    tmp.boxNum = 1
-                    progressList.add(1)
-                    if (!isQuestionAnsweredTrue(
-                            questionId = question.id.toLong(), topicId = tmp.topicId.toLong()
-                        ) && subTopicProgress != null && mainTopicProgress != null
-                    ) {
-                        SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress = subTopicProgress)
-                        SqlRepo.addOrUpdateTopicProgressToRepo(topicProgress = mainTopicProgress)
+    suspend fun addOrUpdateQuestionProgressToRepo(questionProgress: UIQuestionProgress, gameType: GameType) {
+        try {
+            val questionProgressOnList = allQuestionProgressList.first { it.questionId == questionProgress.questionId }
+            when (gameType) {
+                GameType.Practice -> {
+                    val tmp = questionProgressOnList.copy().apply {
+                        if (boxNum != 1) boxNum = questionProgress.boxNum
+                        progress = questionProgress.progress
+                        choiceSelectedIds = questionProgress.choiceSelectedIds
+                        lastUpdate = System.currentTimeMillis().toDouble()
+                        bookmark = questionProgress.bookmark
+                        round = questionProgress.round
+                        times = questionProgress.times
                     }
+                    allQuestionProgressList.removeIf { it.id == questionProgressOnList.id }
+                    allQuestionProgressList.add(tmp)
                 }
-                tmp.progress = progressList.toRealmList()
-                addOrUpdateQuestionProgressToRepo(tmp)
+                else -> {
+                    val tmp = questionProgressOnList.copy().apply {
+                        progress = questionProgress.progress
+                        lastUpdate = System.currentTimeMillis().toDouble()
+                    }
+                    allQuestionProgressList.removeIf { it.id == questionProgressOnList.id }
+                    allQuestionProgressList.add(tmp)
+                }
+            }
+        } catch (e: NoSuchElementException) {
+            when (gameType) {
+                GameType.Practice -> {
+                    allQuestionProgressList.add(questionProgress)
+                }
+                else -> {
+                    allQuestionProgressList.add(
+                        UIQuestionProgress(
+                            progress = questionProgress.progress,
+                            lastUpdate = System.currentTimeMillis().toDouble(),
+                            id = System.currentTimeMillis().toString(),
+                            questionId = questionProgress.id,
+                            topicId = questionProgress.topicId,
+                            stateId = questionProgress.stateId,
+                        )
+                    )
+                }
             }
         }
+        SqlRepo.addOrUpdateQuestionProgressToRepo(allQuestionProgressList.first { it.questionId == questionProgress.questionId })
     }
 
-    fun isFinishQuestion(question: Question, currentQuestionProgress: QuestionProgress): Boolean {
-        return question.correctAnswers.size == currentQuestionProgress.choiceSelectedIds.size
-    }
-
-    fun getAnswerStatus(question: Question, currentQuestionProgress: QuestionProgress): AnswerStatus {
-        return if (!isFinishQuestion(question, currentQuestionProgress)) {
-            when (currentQuestionProgress.boxNum) {
-                1 -> AnswerStatus.TryAgainWithTrue
-                -1 -> AnswerStatus.TryAgainWithFalse
-                else -> AnswerStatus.None
-            }
-        } else {
-            when (currentQuestionProgress.boxNum) {
-                1 -> AnswerStatus.True
-                else -> AnswerStatus.False
-            }
+    suspend fun saveBookmarkToRepo(questionId: Long, topicId: Long, boolean: Boolean) {
+        val result = getQuestionProgressByQuestionId(questionId = questionId, topicId = topicId, isForChecking = true)
+        val tmp = result.copy().apply {
+            lastUpdate = System.currentTimeMillis().toDouble()
+            bookmark = boolean
         }
+        allQuestionProgressList.removeIf { it.questionId == questionId.toString() }
+        allQuestionProgressList.add(tmp)
+        updateFavoriteQuestionsCount()
+        SqlRepo.addOrUpdateQuestionProgressToRepo(tmp)
+    }
+
+    fun getQuestionProgressListByTopicId(topicId: Long): MutableList<UIQuestionProgress> {
+        return allQuestionProgressList.filter { it.topicId == topicId.toString() }.toMutableList()
     }
 
     fun getTrueQuestionsPercent(topicId: Long): Float {
         val questions = getQuestionsByParentId(topicId)
-        val questionProgressList = getAnsweredQuestionsByTopicId(topicId)
+        val questionProgressList = getQuestionProgressListByTopicId(topicId)
         val trueQuestionsCount = questionProgressList.count { it.boxNum == 1 }
         return trueQuestionsCount.toFloat() / questions.size
     }
 
     fun getFalseQuestionsPercent(topicId: Long): Float {
         val questions = getQuestionsByParentId(topicId)
-        val questionProgressList = getAnsweredQuestionsByTopicId(topicId)
+        val questionProgressList = getQuestionProgressListByTopicId(topicId)
         val falseQuestionsCount = questionProgressList.count { it.boxNum == -1 }
         return falseQuestionsCount.toFloat() / questions.size
     }
 
     fun getTrueQuestionsPercentByQuestionProgressList(
-        questionProgressList: MutableList<QuestionProgress>
+        questionProgressList: MutableList<UIQuestionProgress>
     ): Float {
         val trueQuestionsCount = questionProgressList.count { it.boxNum == 1 }
         return trueQuestionsCount.toFloat() / questionProgressList.size
     }
 
     fun getFalseQuestionsPercentByQuestionProgressList(
-        questionProgressList: MutableList<QuestionProgress>
+        questionProgressList: MutableList<UIQuestionProgress>
     ): Float {
         val falseQuestionsCount = questionProgressList.count { it.boxNum == -1 }
         return falseQuestionsCount.toFloat() / questionProgressList.size
     }
 
     suspend fun clearQuestionProgressData(subTopicId: Long) {
-        GlobalScope.launch {
+        viewModelScope.launch {
             val questionProgressList = allQuestionProgressList.filter { it.topicId == subTopicId.toString() }
             for (questionProgressItem in questionProgressList) {
-                val tmp = QuestionProgress()
-                tmp.progress = questionProgressItem.progress
-                tmp.lastUpdate = System.currentTimeMillis().toDouble()
-                tmp.choiceSelectedIds = realmListOf()
-                tmp.boxNum = 0
-                tmp.topicId = questionProgressItem.topicId
-                tmp.questionId = questionProgressItem.questionId
-                tmp.id = questionProgressItem.id
-                tmp.bookmark = questionProgressItem.bookmark
-                tmp.round = questionProgressItem.round
-                tmp.stateId = questionProgressItem.stateId
-                tmp.times = questionProgressItem.times
+                val tmp = questionProgressItem.copy().apply {
+                    lastUpdate = System.currentTimeMillis().toDouble()
+                    choiceSelectedIds = mutableListOf()
+                    boxNum = 0
+                }
                 allQuestionProgressList.removeIf { it.id == questionProgressItem.id }
                 allQuestionProgressList.add(tmp)
             }
@@ -352,7 +205,7 @@ class QuestionViewModel : ViewModel() {
         }
     }
 
-    private fun getReviewQuestionProperty(questionProgress: QuestionProgress): ReviewQuestionProperty {
+    private fun getReviewQuestionProperty(questionProgress: UIQuestionProgress): ReviewQuestionProperty {
         val numberOfCorrectAnswers = questionProgress.progress.count { it == 1 }
         val percentage = numberOfCorrectAnswers.toFloat() / questionProgress.progress.size
         return if (percentage < 0.5) ReviewQuestionProperty.WeakQuestions
@@ -360,52 +213,66 @@ class QuestionViewModel : ViewModel() {
         else ReviewQuestionProperty.StrongQuestions
     }
 
-    fun getAllAnsweredQuestion(): MutableList<Question> {
-        return SqlRepo.getAllAnsweredQuestions(questionProgressList = allQuestionProgressList)
-    }
-
-    fun getAllAnsweredQuestionCount(): Int {
-        return allQuestionProgressList.size
-    }
-
-    private fun getAllQuestionProgress(): MutableList<QuestionProgress> {
+    private fun getAllQuestionProgress(): MutableList<UIQuestionProgress> {
         return allQuestionProgressList
     }
 
-    private fun getQuestionProgressListByReviewProperty(reviewQuestionProperty: ReviewQuestionProperty): MutableList<QuestionProgress> {
+    fun getProgressByQuestionId(questionId: Long): MutableList<Int> {
+        return SqlRepo.getProgressByQuestionId(questionId)
+    }
+
+    private fun getAllFavoriteQuestionProgress(): MutableList<UIQuestionProgress> {
+        return allQuestionProgressList.filter { it.bookmark }.toMutableList()
+    }
+
+    private fun getQuestionProgressListByReviewProperty(reviewQuestionProperty: ReviewQuestionProperty): MutableList<UIQuestionProgress> {
         val allQuestionProgresses = getAllQuestionProgress()
-        val samePropertyQuestionProgressList = mutableListOf<QuestionProgress>()
+        val samePropertyQuestionProgressList = mutableListOf<UIQuestionProgress>()
         for (questionProgress in allQuestionProgresses) {
             val tmp = getReviewQuestionProperty(questionProgress)
-            if (tmp == reviewQuestionProperty) {
+            if (tmp == reviewQuestionProperty && questionProgress.progress.isNotEmpty()) {
                 samePropertyQuestionProgressList.add(questionProgress)
             }
         }
         return samePropertyQuestionProgressList
     }
 
-    fun getQuestionListByReviewProperty(reviewQuestionProperty: ReviewQuestionProperty): MutableList<Question> {
+    private fun getAllFamiliarQuestionProgressList(): MutableList<UIQuestionProgress> {
+        return allQuestionProgressList.filter { it.progress.isNotEmpty() }.toMutableList()
+    }
+
+    //questionList by review properties
+    fun getAllFavoriteQuestions(): MutableList<UIQuestion> {
+        return SqlRepo.getAnsweredQuestionsByQuestionProgressList(getAllFavoriteQuestionProgress())
+    }
+
+    fun getQuestionListByReviewProperty(reviewQuestionProperty: ReviewQuestionProperty): MutableList<UIQuestion> {
         val samePropertyQuestionProgressList = getQuestionProgressListByReviewProperty(reviewQuestionProperty)
         return SqlRepo.getAnsweredQuestionsByQuestionProgressList(samePropertyQuestionProgressList)
     }
 
-    fun getQuestionListCountByReviewProperty(reviewQuestionProperty: ReviewQuestionProperty): Int {
-        return getQuestionProgressListByReviewProperty(reviewQuestionProperty).size
+    fun getAllFamiliarQuestionsList(): MutableList<UIQuestion> {
+        return SqlRepo.getAllAnsweredQuestions(questionProgressList = getAllFamiliarQuestionProgressList())
     }
 
-    private fun getAllFavoriteQuestionProgress(): MutableList<QuestionProgress> {
-        return getAllQuestionProgress().filter { it.bookmark }.toMutableList()
+    //Update review question counts
+    fun updateAllFamiliarQuestionsCount() {
+        allAnsweredQuestionsCount.value = getAllFamiliarQuestionProgressList().size
     }
 
-    fun getAllFavoriteQuestions(): MutableList<Question> {
-        return SqlRepo.getAnsweredQuestionsByQuestionProgressList(getAllFavoriteQuestionProgress())
+    fun updateQuestionListCountByReviewProperty(reviewQuestionProperty: ReviewQuestionProperty) {
+        when (reviewQuestionProperty) {
+            ReviewQuestionProperty.WeakQuestions -> weakQuestionsCount.value =
+                getQuestionProgressListByReviewProperty(ReviewQuestionProperty.WeakQuestions).size
+            ReviewQuestionProperty.MediumQuestions -> mediumQuestionsCount.value =
+                getQuestionProgressListByReviewProperty(ReviewQuestionProperty.MediumQuestions).size
+            ReviewQuestionProperty.StrongQuestions -> strongQuestionsCount.value =
+                getQuestionProgressListByReviewProperty(ReviewQuestionProperty.StrongQuestions).size
+            else -> {}
+        }
     }
 
-    fun getFavoriteQuestionCount(): Int {
-        return getAllFavoriteQuestionProgress().size
-    }
-
-    fun getProgressByQuestionId(questionId: Long): MutableList<Int> {
-        return SqlRepo.getProgressByQuestionId(questionId)
+    private fun updateFavoriteQuestionsCount() {
+        favoriteQuestionsCount.value = getAllFavoriteQuestionProgress().size
     }
 }
