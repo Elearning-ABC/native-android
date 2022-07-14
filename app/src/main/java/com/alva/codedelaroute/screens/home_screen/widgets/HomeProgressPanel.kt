@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -17,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -24,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alva.codedelaroute.R
@@ -35,9 +38,8 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
-@Preview
 @Composable
-fun HomeProgressPanel() {
+fun HomeProgressPanel(modifier: Modifier = Modifier, canvasHeight: MutableState<Dp>) {
     val today = LocalDateTime.now()
 
     val listDaysOfWeek = remember {
@@ -52,15 +54,49 @@ fun HomeProgressPanel() {
         )
     }
 
-    val list = remember {
-        mutableStateOf(listOf(98, 22, 42, 51, 24, 61, 23, 61, 1, 25, 21))
+    val listForChart = remember {
+        mutableStateOf(
+            listOf(
+                mapOf(
+                    "date" to today.minusDays(9), "questionToday" to 40, "passRate" to 24
+                ),
+                mapOf(
+                    "date" to today.minusDays(8), "questionToday" to 40, "passRate" to 24
+                ),
+                mapOf(
+                    "date" to today.minusDays(7), "questionToday" to 70, "passRate" to 60
+                ),
+                mapOf(
+                    "date" to today.minusDays(6), "questionToday" to 321, "passRate" to 80
+                ),
+                mapOf(
+                    "date" to today.minusDays(5), "questionToday" to 224, "passRate" to 91
+                ),
+                mapOf(
+                    "date" to today.minusDays(4), "questionToday" to 270, "passRate" to 21
+                ),
+                mapOf(
+                    "date" to today.minusDays(3), "questionToday" to 380, "passRate" to 54
+                ),
+                mapOf(
+                    "date" to today.minusDays(2), "questionToday" to 11, "passRate" to 100
+                ),
+                mapOf(
+                    "date" to today.minusDays(1), "questionToday" to 70, "passRate" to 78
+                ),
+                mapOf(
+                    "date" to today, "questionToday" to 92, "passRate" to 64
+                ),
+            )
+        )
     }
-    val selectedItem = remember { mutableStateOf(list.value.first()) }
+
+    val selectedItem = remember { mutableStateOf(listForChart.value.first()["questionToday"] as Int) }
 
     val context = LocalContext.current
 
     Surface(
-        modifier = Modifier.fillMaxWidth().shadow(
+        modifier = modifier.fillMaxWidth().shadow(
             elevation = 10.dp,
             shape = RoundedCornerShape(0.dp, 0.dp, 25.dp, 25.dp),
             ambientColor = Color(0xff002395).copy(alpha = 0.3f),
@@ -72,7 +108,7 @@ fun HomeProgressPanel() {
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Row(modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
+            Row(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
                 AnimatedVisibility(!state.currentState) {
                     Row(modifier = Modifier.weight(1f)) {
                         Image(
@@ -115,15 +151,15 @@ fun HomeProgressPanel() {
                         shape = RoundedCornerShape(corner = CornerSize(12.dp)),
                         color = Color(0xffEDF0FF),
                     ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
+                        Column(modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp)) {
                             Text(
                                 "Total questions 65/200",
-                                fontSize = 16.sp,
-                                lineHeight = 21.28.sp,
+                                fontSize = 13.sp,
+                                lineHeight = 15.28.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xff002395),
                             )
-                            Box(modifier = Modifier.padding(vertical = 12.dp)) {
+                            Box(modifier = Modifier.padding(top = 8.dp)) {
                                 CustomLinearProgressBar(
                                     Modifier.height(4.dp).clip(shape = RoundedCornerShape(4.dp)),
                                     Color(0xFFCAD1F5),
@@ -133,11 +169,14 @@ fun HomeProgressPanel() {
                             }
                         }
                     }
-                    BarChartCanvas(list.value) {
-                        selectedItem.value = it
+                    BarChartCanvas(
+                        canvasHeight = canvasHeight.value,
+                        list = listForChart.value
+                    ) { date, questions, passRate ->
+                        selectedItem.value = questions
                         CustomToast.showToast(
                             context,
-                            "You have clicked ${selectedItem.value}!",
+                            "You had answered $questions/400 questions with $passRate% pass rate at $date",
                             icon = R.drawable.check_circle,
                             textColor = R.color.toast_success_text_color,
                             toastBackgroundColor = R.color.toast_success_background_color

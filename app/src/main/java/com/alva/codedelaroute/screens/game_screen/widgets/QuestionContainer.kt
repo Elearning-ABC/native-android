@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alva.codedelaroute.R
@@ -142,15 +143,23 @@ fun QuestionContainer(
                     )
                 ), color = Color.Transparent
             ) {
+                val fontSize = remember { mutableStateOf(16.sp) }
+
                 Text(
                     questionHeader,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
+                    fontSize = fontSize.value,
                     lineHeight = 22.sp,
                     color = textColor,
                     modifier = Modifier.padding(8.dp),
-                    textAlign = TextAlign.Center
-                )
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    softWrap = false,
+                    onTextLayout = { textLayoutResult ->
+                        if (textLayoutResult.didOverflowWidth) {
+                            fontSize.value = fontSize.value.times(0.9)
+                        }
+                    })
             }
         }
     }

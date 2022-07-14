@@ -56,7 +56,7 @@ fun TopUpDialog(
         ),
     ) {
         Surface(
-            modifier = Modifier.padding(50.dp).fillMaxWidth().wrapContentHeight(),
+            modifier = Modifier.padding(30.dp).fillMaxWidth().wrapContentHeight(),
             shape = RoundedCornerShape(corner = CornerSize(25.dp)),
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {

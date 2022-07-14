@@ -39,8 +39,7 @@ import kotlinx.coroutines.runBlocking
 
 @Composable
 fun OnboardingScreen(
-    navController: NavController,
-    listPage: List<Map<String, Any>> = listOf(
+    navController: NavController, listPage: List<Map<String, Any>> = listOf(
         mapOf(
             "backgroundImageId" to R.drawable.onboarding_background_1,
             "imageId" to R.drawable.onboarding_image_1,
@@ -68,7 +67,7 @@ fun OnboardingScreen(
 
     val coroutine = rememberCoroutineScope()
 
-    Box {
+    Box(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
         HorizontalPager(count = listPage.size, modifier = Modifier.fillMaxSize(), state = pagerState) { page ->
             OnBoardingTab(
                 backgroundImageId = listPage[page]["backgroundImageId"] as Int,
@@ -90,34 +89,36 @@ fun OnboardingScreen(
         Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.weight(1f))
             HorizontalPagerIndicator(pagerState, activeColor = Color(0xFF0B2EA0), inactiveColor = Color(0xffD7DDF3))
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
 
 @Composable
 fun OnBoardingTab(
-    imageId: Int, title: String, description: String, buttonName: String, backgroundImageId: Int,
+    imageId: Int,
+    title: String,
+    description: String,
+    buttonName: String,
+    backgroundImageId: Int,
     onButtonClick: () -> Unit = {}
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(backgroundImageId),
-            contentDescription = null,
-            contentScale = ContentScale.Crop
+            painter = painterResource(backgroundImageId), contentDescription = null, contentScale = ContentScale.Crop
         )
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(modifier = Modifier.height(120.dp))
+            Spacer(modifier = Modifier.height(50.dp))
             Image(
                 painter = painterResource(imageId),
                 contentDescription = null,
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Text(
                 title,
                 textAlign = TextAlign.Center,
@@ -125,7 +126,7 @@ fun OnBoardingTab(
                 lineHeight = 34.sp,
                 color = Color(0xFF0E31A3),
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 80.dp)
+                modifier = Modifier.padding(horizontal = 24.dp)
             )
             Spacer(modifier = Modifier.height(20.dp))
             Text(
@@ -137,6 +138,9 @@ fun OnBoardingTab(
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
             Spacer(modifier = Modifier.weight(1f))
+        }
+        Column {
+            Spacer(modifier = Modifier.weight(1f))
             OnBoardingButton(title = buttonName, onClick = onButtonClick)
         }
     }
@@ -146,7 +150,7 @@ fun OnBoardingTab(
 fun OnBoardingButton(
     title: String, onClick: () -> Unit = {}
 ) {
-    FilledTonalButton(modifier = Modifier.padding(horizontal = 24.dp, vertical = 30.dp).fillMaxWidth(),
+    FilledTonalButton(modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp).fillMaxWidth(),
         shape = RoundedCornerShape(corner = CornerSize(12.dp)),
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B2EA0)),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),

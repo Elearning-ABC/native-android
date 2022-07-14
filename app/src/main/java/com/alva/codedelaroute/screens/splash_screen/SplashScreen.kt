@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.mandatorySystemGesturesPadding
 import androidx.compose.material.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -20,6 +21,7 @@ import com.alva.codedelaroute.R
 import com.alva.codedelaroute.navigations.Routes
 import com.alva.codedelaroute.view_models.AppConfigurationViewModel
 import com.alva.codedelaroute.view_models.QuestionViewModel
+import com.google.accompanist.insets.ProvideWindowInsets
 import kotlinx.coroutines.delay
 
 @Composable
@@ -35,8 +37,7 @@ fun SplashScreen(
     val startAnim = remember { mutableStateOf(false) }
 
     val alphaAnim = animateFloatAsState(
-        targetValue = if (startAnim.value) 1f else 0f,
-        animationSpec = tween(
+        targetValue = if (startAnim.value) 1f else 0f, animationSpec = tween(
             durationMillis = 3000
         )
     )
@@ -52,12 +53,14 @@ fun SplashScreen(
         }
     }
 
-    Surface(modifier = Modifier.fillMaxSize().alpha(alpha = alphaAnim.value)) {
-        Image(
-            painter = painterResource(R.drawable.splash_image),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+    ProvideWindowInsets {
+        Surface(modifier = Modifier.fillMaxSize().alpha(alpha = alphaAnim.value)) {
+            Image(
+                painter = painterResource(R.drawable.splash_image),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
     }
 }

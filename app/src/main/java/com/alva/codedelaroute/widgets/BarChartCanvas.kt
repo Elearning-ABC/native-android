@@ -26,23 +26,28 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.consumeDownChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alva.codedelaroute.models.BarArea
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 @Composable
-fun BarChartCanvas(list: List<Int>, barSelected: (Int) -> Unit) {
+fun BarChartCanvas(canvasHeight: Dp, list: List<Map<String, Any>>, barSelected: (String, Int, Int) -> Unit) {
     val density = LocalDensity.current
     val skyBlue400 = Color(0xff57A5FF)
     val horizontalPadding = with(density) { 20.dp.toPx() }
     val distance = with(density) { 50.dp.toPx() }
     val calculatedWidth = with(density) { (distance.times(list.size) + horizontalPadding.times(2)).toDp() }
     Box {
-        Box(modifier = Modifier.fillMaxWidth().padding(24.dp).height(260.dp).align(Alignment.BottomCenter)) {
+        Box(
+            modifier = Modifier.fillMaxWidth().padding(24.dp).height(canvasHeight + 20.dp).align(Alignment.BottomCenter)
+        ) {
             val dividerHorizontalPadding = with(density) {
                 12.dp.toPx()
             }
@@ -101,10 +106,10 @@ fun BarChartCanvas(list: List<Int>, barSelected: (Int) -> Unit) {
                         "0", 0f, size.height, numberTextPaintLeft
                     )
                     canvas.nativeCanvas.drawText(
-                        "50", 0f, size.height - lineDistance, numberTextPaintLeft
+                        "200", 0f, size.height - lineDistance, numberTextPaintLeft
                     )
                     canvas.nativeCanvas.drawText(
-                        "100", 0f, size.height - lineDistance.times(2), numberTextPaintLeft
+                        "400", 0f, size.height - lineDistance.times(2), numberTextPaintLeft
                     )
                     canvas.nativeCanvas.drawText(
                         "0", size.width, size.height - lineDistance.times(2), numberTextPaintRight
@@ -119,7 +124,7 @@ fun BarChartCanvas(list: List<Int>, barSelected: (Int) -> Unit) {
             }
         }
         Box(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 36.dp, vertical = 24.dp).height(240.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 36.dp, vertical = 24.dp).height(canvasHeight)
                 .align(Alignment.BottomCenter)
         ) {
             Row(
@@ -131,25 +136,34 @@ fun BarChartCanvas(list: List<Int>, barSelected: (Int) -> Unit) {
                 val textSize = with(density) { 10.sp.toPx() }
                 val cornerRadius = with(density) { 4.dp.toPx() }
                 val labelSectionHeight = smallPadding.times(2) + textSize
-                val barAreas = list.mapIndexed { index, i ->
+                val barAreasForQuestions = list.mapIndexed { index, i ->
                     BarArea(
                         index = index,
-                        value = i,
+                        value = i["questionToday"] as Int,
                         xStart = horizontalPadding + distance.times(index) - distance.div(2),
                         xEnd = horizontalPadding + distance.times(index) + distance.div(2)
                     )
                 }
-                var selectedPosition by remember { mutableStateOf(barAreas.first().xStart.plus(1f)) }
+                val barAreasForPassRate = list.mapIndexed { index, i ->
+                    BarArea(
+                        index = index,
+                        value = i["passRate"] as Int,
+                        xStart = horizontalPadding + distance.times(index) - distance.div(2),
+                        xEnd = horizontalPadding + distance.times(index) + distance.div(2)
+                    )
+                }
+                var selectedPosition by remember { mutableStateOf(barAreasForQuestions.last().xStart.plus(1f)) }
                 var tempPosition by remember { mutableStateOf(-1000f) }
-                val selectedBar by remember(selectedPosition, barAreas) {
+                val selectedBar by remember(selectedPosition, barAreasForQuestions) {
                     derivedStateOf {
-                        barAreas.find { it.xStart < selectedPosition && selectedPosition < it.xEnd }
+                        barAreasForQuestions.find { it.xStart < selectedPosition && selectedPosition < it.xEnd }
                     }
                 }
                 val paint = Paint().apply {
                     color = 0xffff47586B.toInt()
                     textAlign = Paint.Align.CENTER
                     this.textSize = textSize
+                    this.typeface = Typeface.DEFAULT_BOLD
                 }
                 val scope = rememberCoroutineScope()
                 val animatable = remember { Animatable(1f) }
@@ -180,8 +194,16 @@ fun BarChartCanvas(list: List<Int>, barSelected: (Int) -> Unit) {
                     scope.launch {
                         selectedPosition = it
                         animatable.snapTo(tempAnimatable.value)
-                        selectedBar?.value?.let { value ->
-                            barSelected(value)
+                        selectedBar?.value?.let {
+                            barSelected(
+                                (list[selectedBar!!.index]["date"] as LocalDateTime).format(
+                                    DateTimeFormatter.ofPattern(
+                                        "MMM dd"
+                                    )
+                                ),
+                                selectedBar!!.value,
+                                barAreasForPassRate.first { it.index == selectedBar!!.index }.value
+                            )
                         }
                         async {
                             animatable.animateTo(
@@ -208,14 +230,17 @@ fun BarChartCanvas(list: List<Int>, barSelected: (Int) -> Unit) {
                             end = Offset(size.width, it.times(lineDistance))
                         )
                     }
-                    val scale = calculateScale((size.height / 2 - smallPadding).roundToInt(), list)
+                    val scaleForQuestion = calculateScale((size.height / 2 - smallPadding).roundToInt(),
+                        list.map { it["questionToday"] as Int })
+                    val scaleForPassRate = calculateScale((size.height / 2 - smallPadding).roundToInt(),
+                        list.map { it["passRate"] as Int })
                     val chartAreaBottom = size.height - labelSectionHeight
                     val lineChartAreaBottom = size.height / 2 - labelSectionHeight
 
-                    barAreas.forEachIndexed { index, item ->
-                        val barHeight = item.value.times(scale).toFloat()
+                    barAreasForPassRate.forEachIndexed { index, item ->
+                        val barHeight = item.value.times(scaleForPassRate).toFloat()
                         if (index < list.size - 1) {
-                            val nextBarHeight = barAreas[index + 1].value.times(scale).toFloat()
+                            val nextBarHeight = barAreasForPassRate[index + 1].value.times(scaleForPassRate).toFloat()
                             drawLine(color = skyBlue400, start = Offset(
                                 x = horizontalPadding + distance.times(index), y = size.height / 2 - barHeight
                             ), end = Offset(
@@ -288,14 +313,25 @@ fun BarChartCanvas(list: List<Int>, barSelected: (Int) -> Unit) {
                         }
                     }
 
-                    barAreas.forEachIndexed { index, item ->
-                        val barHeight = item.value.times(scale).toFloat()
-                        drawRoundRect(
-                            color = skyBlue400, topLeft = Offset(
-                                x = horizontalPadding + distance.times(index) - barWidth.div(2),
-                                y = size.height - barHeight
-                            ), size = Size(barWidth, barHeight), cornerRadius = CornerRadius(cornerRadius)
-                        )
+                    val dateFormat = DateTimeFormatter.ofPattern("MMM dd")
+
+                    barAreasForQuestions.forEachIndexed { index, item ->
+                        val barHeight = item.value.times(scaleForQuestion).toFloat()
+                        if (index < list.size - 1) {
+                            drawRoundRect(
+                                color = skyBlue400, topLeft = Offset(
+                                    x = horizontalPadding + distance.times(index) - barWidth.div(2),
+                                    y = size.height - barHeight
+                                ), size = Size(barWidth, barHeight), cornerRadius = CornerRadius(cornerRadius)
+                            )
+                        } else {
+                            drawRoundRect(
+                                color = Color(0xff00CA9F), topLeft = Offset(
+                                    x = horizontalPadding + distance.times(index) - barWidth.div(2),
+                                    y = size.height - barHeight
+                                ), size = Size(barWidth, barHeight), cornerRadius = CornerRadius(cornerRadius)
+                            )
+                        }
                         this.drawIntoCanvas { canvas ->
                             val textPositionY = chartAreaBottom - barHeight + smallPadding
                             canvas.nativeCanvas.drawText(
@@ -305,7 +341,10 @@ fun BarChartCanvas(list: List<Int>, barSelected: (Int) -> Unit) {
                         this.drawIntoCanvas { canvas ->
                             val textPositionY = size.height + smallPadding + textSize
                             canvas.nativeCanvas.drawText(
-                                "$index", horizontalPadding + distance.times(index), textPositionY, paint
+                                (list[index]["date"] as LocalDateTime).format(dateFormat),
+                                horizontalPadding + distance.times(index),
+                                textPositionY,
+                                paint
                             )
                         }
                     }
@@ -330,7 +369,7 @@ fun BarChartCanvas(list: List<Int>, barSelected: (Int) -> Unit) {
 
 fun calculateScale(viewHeightPx: Int, values: List<Int>): Double {
     return values.maxOrNull()?.let { max ->
-        viewHeightPx.times(0.8).div(max)
+        viewHeightPx.times(1.0).div(max)
     } ?: 1.0
 }
 

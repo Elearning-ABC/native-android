@@ -2,6 +2,7 @@ package com.alva.codedelaroute.screens.topic_passed_screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
@@ -39,6 +40,7 @@ import com.alva.codedelaroute.view_models.TopicViewModel
 import com.alva.codedelaroute.widgets.BarChartCanvas
 import com.alva.codedelaroute.widgets.CustomToast
 import kotlinx.coroutines.runBlocking
+import java.time.LocalDateTime
 
 @Composable
 fun TopicPassedScreen(
@@ -47,6 +49,8 @@ fun TopicPassedScreen(
     topicViewModel: TopicViewModel = viewModel(),
     questionViewModel: QuestionViewModel = viewModel()
 ) {
+    val today = LocalDateTime.now()
+
     val subTopic = topicViewModel.getTopicById(subTopicId.toLong())
 
     val mainTopic = topicViewModel.getTopicById(subTopic.parentId.toLong())
@@ -55,10 +59,44 @@ fun TopicPassedScreen(
 
     val openDialog = remember { mutableStateOf(false) }
 
-    val list = remember {
-        mutableStateOf(listOf(98, 22, 42, 51, 24, 61, 23, 61, 1, 25, 21))
+    val listForChart = remember {
+        mutableStateOf(
+            listOf(
+                mapOf(
+                    "date" to today.minusDays(9), "questionToday" to 40, "passRate" to 24
+                ),
+                mapOf(
+                    "date" to today.minusDays(8), "questionToday" to 40, "passRate" to 24
+                ),
+                mapOf(
+                    "date" to today.minusDays(7), "questionToday" to 70, "passRate" to 60
+                ),
+                mapOf(
+                    "date" to today.minusDays(6), "questionToday" to 321, "passRate" to 80
+                ),
+                mapOf(
+                    "date" to today.minusDays(5), "questionToday" to 224, "passRate" to 91
+                ),
+                mapOf(
+                    "date" to today.minusDays(4), "questionToday" to 270, "passRate" to 21
+                ),
+                mapOf(
+                    "date" to today.minusDays(3), "questionToday" to 380, "passRate" to 54
+                ),
+                mapOf(
+                    "date" to today.minusDays(2), "questionToday" to 11, "passRate" to 100
+                ),
+                mapOf(
+                    "date" to today.minusDays(1), "questionToday" to 70, "passRate" to 78
+                ),
+                mapOf(
+                    "date" to today, "questionToday" to 92, "passRate" to 64
+                ),
+            )
+        )
     }
-    val selectedItem = remember { mutableStateOf(list.value.first()) }
+
+    val selectedItem = remember { mutableStateOf(listForChart.value.first()["questionToday"] as Int) }
 
     val context = LocalContext.current
 
@@ -84,62 +122,69 @@ fun TopicPassedScreen(
                     contentDescription = null,
                     contentScale = ContentScale.Crop
                 )
-                Column(modifier = Modifier.padding(vertical = 20.dp).fillMaxSize()) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 52.dp).fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            "Congratulations!",
-                            textAlign = TextAlign.Center,
-                            color = Color(0xFF002395),
-                            fontSize = 24.sp,
-                            lineHeight = 32.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(modifier = Modifier.size(5.dp))
-                        Text(
-                            "You’ve successfully completed part ${subTopic.name.last()}!",
-                            textAlign = TextAlign.Center,
-                            color = Color(0xFF272728),
-                            fontSize = 16.sp,
-                            lineHeight = 22.sp,
-                        )
-                        Spacer(modifier = Modifier.size(5.dp))
-                        Box(modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp)) {
-                            Image(
-                                painter = painterResource(R.drawable.success_human),
-                                contentDescription = null,
-                                contentScale = ContentScale.FillWidth, modifier = Modifier.fillMaxWidth()
+                LazyColumn(modifier = Modifier.padding(vertical = 20.dp).fillMaxSize()) {
+                    item {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 52.dp).fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Congratulations!",
+                                textAlign = TextAlign.Center,
+                                color = Color(0xFF002395),
+                                fontSize = 24.sp,
+                                lineHeight = 32.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(modifier = Modifier.size(5.dp))
+                            Text(
+                                "You’ve successfully completed part ${subTopic.name.last()}!",
+                                textAlign = TextAlign.Center,
+                                color = Color(0xFF272728),
+                                fontSize = 16.sp,
+                                lineHeight = 22.sp,
+                            )
+                            Spacer(modifier = Modifier.size(5.dp))
+                            Box(modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp)) {
+                                Image(
+                                    painter = painterResource(R.drawable.success_human),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.FillWidth,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                            Spacer(modifier = Modifier.size(10.dp))
+                            Text(
+                                "Let's take a look at your study progress today",
+                                textAlign = TextAlign.Center,
+                                color = Color.Black,
+                                fontSize = 18.sp,
+                                lineHeight = 24.sp,
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
-                        Spacer(modifier = Modifier.size(10.dp))
-                        Text(
-                            "Let's take a look at your study progress today",
-                            textAlign = TextAlign.Center,
-                            color = Color.Black,
-                            fontSize = 18.sp,
-                            lineHeight = 24.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Spacer(modifier = Modifier.size(20.dp))
+                        BarChartCanvas(
+                            canvasHeight = 240.dp, list = listForChart.value
+                        ) { date, questions, passRate ->
+                            selectedItem.value = questions
+                            CustomToast.showToast(
+                                context,
+                                "You had answered $questions/400 questions with $passRate% pass rate at $date",
+                                icon = R.drawable.check_circle,
+                                textColor = R.color.toast_success_text_color,
+                                toastBackgroundColor = R.color.toast_success_background_color
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(140.dp))
                     }
-                    Spacer(modifier = Modifier.size(20.dp))
-                    BarChartCanvas(list.value) { item ->
-                        selectedItem.value = item
-                        CustomToast.showToast(
-                            context,
-                            "You have clicked ${selectedItem.value}!",
-                            icon = R.drawable.check_circle,
-                            textColor = R.color.toast_success_text_color,
-                            toastBackgroundColor = R.color.toast_success_background_color
-                        )
-                    }
+                }
+                Column(modifier = Modifier.fillMaxSize()) {
                     Spacer(modifier = Modifier.weight(1f))
                     ControlPanel(
-                        navController,
-                        nextTopicId,
-                        openDialog
+                        navController, nextTopicId, openDialog
                     )
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
         }
@@ -155,8 +200,7 @@ fun TopicPassedScreen(
             buttonAcceptClick = {
                 runBlocking {
                     topicViewModel.clearSubTopicProgressData(
-                        subTopicId = subTopicId.toLong(),
-                        parentTopicId = mainTopic.id.toLong()
+                        subTopicId = subTopicId.toLong(), parentTopicId = mainTopic.id.toLong()
                     )
                     questionViewModel.clearQuestionProgressData(
                         subTopicId.toLong()
@@ -173,9 +217,7 @@ fun TopicPassedScreen(
 
 @Composable
 fun ControlPanel(
-    navController: NavController,
-    nextTopicId: String? = null,
-    openDialog: MutableState<Boolean>
+    navController: NavController, nextTopicId: String? = null, openDialog: MutableState<Boolean>
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
         CustomButton(
@@ -211,12 +253,24 @@ fun CustomButton(
     textColor: Color,
     onClick: () -> Unit = {},
 ) {
+    val fontSize = remember { mutableStateOf(16.sp) }
     ElevatedButton(
         onClick = onClick,
         modifier = modifier,
         colors = ButtonDefaults.buttonColors(containerColor = buttonColor, contentColor = textColor),
         shape = RoundedCornerShape(corner = CornerSize(12.dp)),
     ) {
-        Text(buttonTitle, color = textColor, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, lineHeight = 22.sp)
+        Text(buttonTitle,
+            color = textColor,
+            fontSize = fontSize.value,
+            fontWeight = FontWeight.SemiBold,
+            lineHeight = 22.sp,
+            maxLines = 1,
+            softWrap = false,
+            onTextLayout = { textLayoutResult ->
+                if (textLayoutResult.didOverflowWidth) {
+                    fontSize.value = fontSize.value.times(0.9)
+                }
+            })
     }
 }
