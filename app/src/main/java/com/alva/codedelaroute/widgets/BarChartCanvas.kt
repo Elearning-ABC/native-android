@@ -127,8 +127,13 @@ fun BarChartCanvas(canvasHeight: Dp, list: List<Map<String, Any>>, barSelected: 
             modifier = Modifier.fillMaxWidth().padding(horizontal = 36.dp, vertical = 24.dp).height(canvasHeight)
                 .align(Alignment.BottomCenter)
         ) {
+            val logState = rememberScrollState(0)
+
+            LaunchedEffect(Unit) {
+                logState.scrollTo(logState.maxValue)
+            }
             Row(
-                Modifier.fillMaxSize().horizontalScroll(rememberScrollState())
+                Modifier.fillMaxSize().horizontalScroll(logState)
             ) {
                 val barWidth = with(density) { 18.dp.toPx() }
                 val selectionWidth = with(density) { 24.dp.toPx() }
