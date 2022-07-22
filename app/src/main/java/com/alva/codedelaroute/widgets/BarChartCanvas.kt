@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.input.pointer.consumeDownChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -158,7 +157,6 @@ fun BarChartCanvas(canvasHeight: Dp, list: List<Map<String, Any>>, barSelected: 
                     )
                 }
                 var selectedPosition by remember { mutableStateOf(barAreasForQuestions.last().xStart.plus(1f)) }
-                var tempPosition by remember { mutableStateOf(-1000f) }
                 val selectedBar by remember(selectedPosition, barAreasForQuestions) {
                     derivedStateOf {
                         barAreasForQuestions.find { it.xStart < selectedPosition && selectedPosition < it.xEnd }
@@ -180,7 +178,6 @@ fun BarChartCanvas(canvasHeight: Dp, list: List<Map<String, Any>>, barSelected: 
                             if (position in selected.xStart..selected.xEnd) {
                                 // click in selected area - do nothing
                             } else {
-                                tempPosition = position
                                 scope.launch {
                                     tempAnimatable.snapTo(0f)
                                     tempAnimatable.animateTo(1f, animationSpec = tween(300))
@@ -190,12 +187,10 @@ fun BarChartCanvas(canvasHeight: Dp, list: List<Map<String, Any>>, barSelected: 
                         }
                     }
                 }, onCancel = {
-                    tempPosition = -Int.MAX_VALUE.toFloat()
                     scope.launch {
                         tempAnimatable.animateTo(0f)
                     }
                 }, onCompleted = {
-                    val currentSelected = selectedBar
                     scope.launch {
                         selectedPosition = it
                         animatable.snapTo(tempAnimatable.value)
@@ -219,8 +214,7 @@ fun BarChartCanvas(canvasHeight: Dp, list: List<Map<String, Any>>, barSelected: 
                         }
                         async {
                             tempAnimatable.snapTo(0f)
-                            currentSelected?.let {
-                                tempPosition = currentSelected.xStart.plus(1f)
+                            selectedBar?.let {
                                 tempAnimatable.snapTo(1f)
                                 tempAnimatable.animateTo(0f, tween(300))
                             }
@@ -386,13 +380,13 @@ fun Modifier.tapOrPress(
         forEachGesture {
             coroutineScope {
                 awaitPointerEventScope {
-                    val tap = awaitFirstDown().also { it.consumeDownChange() }
+                    val tap = awaitFirstDown().also { if (it.pressed != it.previousPressed) it.consume() }
                     onStart(tap.position.x)
                     val up = waitForUpOrCancellation()
                     if (up == null) {
                         onCancel(tap.position.x)
                     } else {
-                        up.consumeDownChange()
+                        if (up.pressed != up.previousPressed) up.consume()
                         onCompleted(tap.position.x)
                     }
                 }

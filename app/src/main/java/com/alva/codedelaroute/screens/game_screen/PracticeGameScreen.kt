@@ -21,8 +21,6 @@ import com.alva.codedelaroute.view_models.GameViewModel
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.view_models.TopicViewModel
 import com.alva.codedelaroute.widgets.CustomToast
-import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.insets.systemBarsPadding
 import kotlinx.coroutines.runBlocking
 
 @Composable
@@ -37,7 +35,8 @@ fun PracticeGameScreen(
     val subTopic: UITopic = remember { topicViewModel.getTopicById(subTopicId.toLong()) }
     val mainTopic: UITopic = remember { topicViewModel.getTopicById(subTopic.parentId.toLong()) }
 
-    val subTopicProgress: UITopicProgress = remember { topicViewModel.getTopicProgressByTopicId(subTopicId.toLong()) }
+    val subTopicProgress: UITopicProgress =
+        remember { topicViewModel.getTopicProgressByTopicId(subTopicId.toLong()) }
     val mainTopicProgress: UITopicProgress =
         remember { topicViewModel.getTopicProgressByTopicId(mainTopic.id.toLong()) }
 
@@ -53,10 +52,20 @@ fun PracticeGameScreen(
     }
 
     var questionProgress =
-        questionViewModel.getQuestionProgressByQuestionId(currentQuestion.value.id.toLong(), subTopicId.toLong())
+        questionViewModel.getQuestionProgressByQuestionId(
+            currentQuestion.value.id.toLong(),
+            subTopicId.toLong()
+        )
 
     val checkFinishedQuestion =
-        remember { mutableStateOf(gameViewModel.isFinishQuestion(currentQuestion.value, questionProgress)) }
+        remember {
+            mutableStateOf(
+                gameViewModel.isFinishQuestion(
+                    currentQuestion.value,
+                    questionProgress
+                )
+            )
+        }
 
     val answerStatus = remember {
         mutableStateOf(
@@ -76,9 +85,7 @@ fun PracticeGameScreen(
 
     val dataStore = AppConfigurationViewModel(context)
 
-    val fontSize = dataStore.getFontSizeScale.collectAsState(1.0f)
-
-    val sliderValue = remember { mutableStateOf(fontSize.value!!) }
+    val sliderValue = dataStore.getFontSizeScale.collectAsState(1.0f) as MutableState<Float>
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -86,101 +93,113 @@ fun PracticeGameScreen(
             contentDescription = null,
             contentScale = ContentScale.Crop,
         )
-        ProvideWindowInsets {
-            Scaffold(topBar = {
-                QuestionAppBar(
-                    appBarTitle = mainTopic.name + ": " + subTopic.name, fontSizeScale = sliderValue
-                ) {
-                    navController.popBackStack()
-                }
-            },
-                backgroundColor = Color.Transparent,
-                contentColor = Color.Transparent,
-                modifier = Modifier.fillMaxSize().systemBarsPadding(true),
-                bottomBar = {
-                    QuestionBottomBar(bookmark = bookmark, onFlagClick = {}, onBookMarkClick = {
-                        runBlocking {
-                            bookmark.value = !bookmark.value
-                            questionViewModel.saveBookmarkToRepo(
-                                questionProgress.questionId.toLong(),
-                                questionProgress.topicId.toLong(),
-                                boolean = bookmark.value
+        Scaffold(topBar = {
+            QuestionAppBar(
+                appBarTitle = mainTopic.name + ": " + subTopic.name, fontSizeScale = sliderValue
+            ) {
+                navController.popBackStack()
+            }
+        },
+            backgroundColor = Color.Transparent,
+            contentColor = Color.Transparent,
+            modifier = Modifier
+                .systemBarsPadding()
+                .fillMaxSize(),
+            bottomBar = {
+                QuestionBottomBar(bookmark = bookmark, onFlagClick = {}, onBookMarkClick = {
+                    runBlocking {
+                        bookmark.value = !bookmark.value
+                        questionViewModel.saveBookmarkToRepo(
+                            questionProgress.questionId.toLong(),
+                            questionProgress.topicId.toLong(),
+                            boolean = bookmark.value
+                        )
+                        if (bookmark.value) {
+                            CustomToast.showToast(
+                                context = context,
+                                message = "Added to favorites!",
+                                icon = R.drawable.check_circle,
+                                textColor = R.color.toast_success_text_color,
+                                toastBackgroundColor = R.color.toast_success_background_color,
                             )
-                            if (bookmark.value) {
-                                CustomToast.showToast(
-                                    context = context,
-                                    message = "Added to favorites!",
-                                    icon = R.drawable.check_circle,
-                                    textColor = R.color.toast_success_text_color,
-                                    toastBackgroundColor = R.color.toast_success_background_color,
-                                )
-                            } else {
-                                CustomToast.showToast(
-                                    context = context,
-                                    message = "Removed from favorites!",
-                                    icon = R.drawable.check_circle,
-                                    textColor = R.color.toast_success_text_color,
-                                    toastBackgroundColor = R.color.toast_success_background_color,
-                                )
-                            }
-                        }
-                    }, onNextClick = {
-                        if (topicViewModel.checkFinishedTopic(topicId = subTopicId)) {
-                            navController.popBackStack()
-                            navController.navigate(Routes.TopicPassedScreen.name + "/$subTopicId")
                         } else {
-                            if (gameViewModel.isFinishQuestion(currentQuestion.value, questionProgress)) {
-                                runBlocking {
-                                    currentQuestion.value = gameViewModel.getNextGameQuestion(
-                                        questionList = questions,
-                                        questionProgressList = questionViewModel.getQuestionProgressListByTopicId(
-                                            subTopicId.toLong()
-                                        )
+                            CustomToast.showToast(
+                                context = context,
+                                message = "Removed from favorites!",
+                                icon = R.drawable.check_circle,
+                                textColor = R.color.toast_success_text_color,
+                                toastBackgroundColor = R.color.toast_success_background_color,
+                            )
+                        }
+                    }
+                }, onNextClick = {
+                    if (topicViewModel.checkFinishedTopic(topicId = subTopicId)) {
+                        navController.popBackStack()
+                        navController.navigate(Routes.TopicPassedScreen.name + "/$subTopicId")
+                    } else {
+                        if (gameViewModel.isFinishQuestion(
+                                currentQuestion.value,
+                                questionProgress
+                            )
+                        ) {
+                            runBlocking {
+                                currentQuestion.value = gameViewModel.getNextGameQuestion(
+                                    questionList = questions,
+                                    questionProgressList = questionViewModel.getQuestionProgressListByTopicId(
+                                        subTopicId.toLong()
                                     )
+                                )
 
-                                    questionProgress = questionViewModel.getQuestionProgressByQuestionId(
+                                questionProgress =
+                                    questionViewModel.getQuestionProgressByQuestionId(
                                         currentQuestion.value.id.toLong(), subTopicId.toLong()
                                     )
 
-                                    checkFinishedQuestion.value =
-                                        gameViewModel.isFinishQuestion(currentQuestion.value, questionProgress)
-
-                                    answerStatus.value = gameViewModel.getAnswerStatus(
-                                        question = currentQuestion.value,
-                                        currentQuestionProgress = questionProgress,
-                                        gameType = GameType.Practice
+                                checkFinishedQuestion.value =
+                                    gameViewModel.isFinishQuestion(
+                                        currentQuestion.value,
+                                        questionProgress
                                     )
 
-                                    bookmark.value = questionProgress.bookmark
+                                answerStatus.value = gameViewModel.getAnswerStatus(
+                                    question = currentQuestion.value,
+                                    currentQuestionProgress = questionProgress,
+                                    gameType = GameType.Practice
+                                )
 
-                                    showExplanation.value = false
-                                }
+                                bookmark.value = questionProgress.bookmark
+
+                                showExplanation.value = false
                             }
                         }
-                    })
-                }) { innerPadding ->
-                Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                    QuestionProgressBar(
-                        questionViewModel = questionViewModel,
-                        subTopicId = subTopicId,
-                        checkFinishedQuestion = checkFinishedQuestion
-                    )
-                    GamePanel(
-                        modifier = Modifier.weight(1f),
-                        gameType = GameType.Practice,
-                        currentQuestion = currentQuestion,
-                        questionList = questions,
-                        answerStatus = answerStatus,
-                        questionViewModel = questionViewModel,
-                        gameViewModel = gameViewModel,
-                        questionProgress = questionProgress,
-                        subTopicProgress = subTopicProgress,
-                        mainTopicProgress = mainTopicProgress,
-                        checkFinishedQuestion = checkFinishedQuestion,
-                        sliderValue = sliderValue,
-                        showExplanation = showExplanation
-                    )
-                }
+                    }
+                })
+            }) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                QuestionProgressBar(
+                    questionViewModel = questionViewModel,
+                    subTopicId = subTopicId,
+                    checkFinishedQuestion = checkFinishedQuestion
+                )
+                GamePanel(
+                    modifier = Modifier.weight(1f),
+                    gameType = GameType.Practice,
+                    currentQuestion = currentQuestion,
+                    questionList = questions,
+                    answerStatus = answerStatus,
+                    questionViewModel = questionViewModel,
+                    gameViewModel = gameViewModel,
+                    questionProgress = questionProgress,
+                    subTopicProgress = subTopicProgress,
+                    mainTopicProgress = mainTopicProgress,
+                    checkFinishedQuestion = checkFinishedQuestion,
+                    sliderValue = sliderValue,
+                    showExplanation = showExplanation
+                )
             }
         }
     }

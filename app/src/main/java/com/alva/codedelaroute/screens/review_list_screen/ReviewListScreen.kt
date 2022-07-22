@@ -39,8 +39,6 @@ import com.alva.codedelaroute.screens.review_list_screen.widgets.ReviewButton
 import com.alva.codedelaroute.utils.ReviewQuestionProperty
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.widgets.CustomToast
-import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.insets.systemBarsPadding
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
 
@@ -56,43 +54,47 @@ fun ReviewListScreen(
         else -> questionViewModel.getQuestionListByReviewProperty(reviewQuestionProperty)
     }
 
-    Surface(modifier = Modifier.fillMaxSize()) {
+    Surface(modifier = Modifier
+        .systemBarsPadding()
+        .fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.background),
             contentDescription = null,
             contentScale = ContentScale.Crop
         )
-        ProvideWindowInsets {
-            Scaffold(modifier = Modifier.fillMaxSize().systemBarsPadding(true),
-                backgroundColor = Color.Transparent,
-                topBar = {
-                    SmallTopAppBar(navigationIcon = {
-                        IconButton(onClick = {
-                            navController.popBackStack()
-                        }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = null)
-                        }
-                    }, title = {
+        Scaffold(modifier = Modifier.fillMaxSize(),
+            backgroundColor = Color.Transparent,
+            topBar = {
+                SmallTopAppBar(navigationIcon = {
+                    IconButton(onClick = {
+                        navController.popBackStack()
+                    }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+                    }
+                },
+                    title = {
                         Text(
                             "${reviewQuestionProperty.name} (${questionListByReviewQuestionProperty.size})",
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp,
                             lineHeight = 24.sp
                         )
-                    }, colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent)
+                    },
+                    colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent)
+                )
+            }) { innerPadding ->
+            Column(modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()) {
+                ReviewPanel(
+                    modifier = Modifier.weight(1f),
+                    questionList = questionListByReviewQuestionProperty,
+                    showAnswerInitialValue = false
+                )
+                ReviewButton(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp)) {
+                    navController.navigate(
+                        Routes.ReviewGameScreen.name + "/${reviewQuestionProperty.name}",
                     )
-                }) { innerPadding ->
-                Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-                    ReviewPanel(
-                        modifier = Modifier.weight(1f),
-                        questionList = questionListByReviewQuestionProperty,
-                        showAnswerInitialValue = false
-                    )
-                    ReviewButton(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp)) {
-                        navController.navigate(
-                            Routes.ReviewGameScreen.name + "/${reviewQuestionProperty.name}",
-                        )
-                    }
                 }
             }
         }
@@ -118,7 +120,8 @@ fun ReviewPanel(
 
             try {
                 with(context.assets.open("images/${item.image}")) {
-                    imageBitmap.value = android.graphics.BitmapFactory.decodeStream(this).asImageBitmap()
+                    imageBitmap.value =
+                        android.graphics.BitmapFactory.decodeStream(this).asImageBitmap()
                 }
             } catch (e: IOException) {
                 imageBitmap.value = null
@@ -158,14 +161,18 @@ fun ReviewItemCard(
     val context = LocalContext.current
 
     Card(
-        modifier = Modifier.padding(top = 16.dp, start = 24.dp, end = 24.dp).fillMaxWidth().shadow(
-            elevation = 10.dp,
-            shape = RoundedCornerShape(corner = CornerSize(8.dp)),
-            ambientColor = Color(0xff002395).copy(alpha = 0.3f),
-            spotColor = Color(0xff002395).copy(alpha = 0.3f),
-        ).clickable {
-            showAnswer.value = !showAnswer.value
-        },
+        modifier = Modifier
+            .padding(top = 16.dp, start = 24.dp, end = 24.dp)
+            .fillMaxWidth()
+            .shadow(
+                elevation = 10.dp,
+                shape = RoundedCornerShape(corner = CornerSize(8.dp)),
+                ambientColor = Color(0xff002395).copy(alpha = 0.3f),
+                spotColor = Color(0xff002395).copy(alpha = 0.3f),
+            )
+            .clickable {
+                showAnswer.value = !showAnswer.value
+            },
         shape = RoundedCornerShape(corner = CornerSize(8.dp)), backgroundColor = Color.White,
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -176,14 +183,18 @@ fun ReviewItemCard(
                             Icons.Default.Check,
                             tint = Color(0xFF00C17C),
                             contentDescription = null,
-                            modifier = Modifier.padding(2.dp).size(10.dp)
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .size(10.dp)
                         )
                         else {
                             Icon(
                                 Icons.Default.Close,
                                 tint = Color(0xffEE7874),
                                 contentDescription = null,
-                                modifier = Modifier.padding(2.dp).size(10.dp)
+                                modifier = Modifier
+                                    .padding(2.dp)
+                                    .size(10.dp)
                             )
                         }
                     }

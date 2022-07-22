@@ -1,6 +1,7 @@
 package com.alva.codedelaroute.screens.home_screen.widgets
 
 import android.app.TimePickerDialog
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,6 +12,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -26,6 +28,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 
 import com.alva.codedelaroute.R
 
@@ -33,13 +37,21 @@ import com.alva.codedelaroute.R
 @Composable
 fun MenuBottomSheet() {
     val context = LocalContext.current
+    val checkNotiState = remember { mutableStateOf(false) }
+    val checkStateDarkMode = remember { mutableStateOf(false) }
+    val time = remember { mutableStateOf("11:34") }
 
     Surface(color = Color(0xFFF1F1F1)) {
         LazyColumn {
             item {
                 Box(contentAlignment = Alignment.TopCenter) {
                     BottomSheetHeader()
-                    Divider(modifier = Modifier.padding(vertical = 4.dp).width(100.dp), thickness = 3.dp)
+                    Divider(
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .width(100.dp),
+                        thickness = 3.dp
+                    )
                 }
                 Spacer(modifier = Modifier.height(24.dp))
                 BottomSheetItem(
@@ -107,62 +119,77 @@ fun MenuBottomSheet() {
                     },
                 )
                 Spacer(modifier = Modifier.height(24.dp))
+
                 BottomSheetItem(
                     icon = R.drawable.notification,
                     title = "Notification",
                     trailingComposable = {
-                        val checkState = remember { mutableStateOf(true) }
                         Switch(
-                            checked = checkState.value,
-                            onCheckedChange = { checkState.value = !checkState.value },
+                            checked = checkNotiState.value,
+                            onCheckedChange = {/*Do at trailing lambda*/ },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color(0xFF0E31A3),
                                 uncheckedThumbColor = Color(0xFF868687),
                             )
                         )
                     },
-                )
-                Divider(color = Color(0xFFF1F1F1))
-                BottomSheetItem(
-                    icon = R.drawable.time_circle,
-                    title = "Remind me at",
-                    trailingComposable = {
-                        val time = remember { mutableStateOf("") }
-                        val timePickerDialog = TimePickerDialog(
-                            context,
-                            { _, hour: Int, minute: Int ->
-                                time.value = "${"%02d".format(hour)}:${
-                                    "%02d".format(minute)
-                                }"
-                            }, 0, 0, true
+                ) {
+                    checkNotiState.value = !checkNotiState.value
+                }
+                AnimatedVisibility(visible = checkNotiState.value) {
+                    Divider(
+                        color = Color(
+                            0xFFF1F1F1
                         )
-                        Text(
-                            text = if (time.value.equals("")) "17:34" else time.value,
-                            textDecoration = TextDecoration.Underline,
-                            color = Color(0xFF272728),
-                            fontSize = 16.sp,
-                            lineHeight = 26.sp,
-                            modifier = Modifier.padding(horizontal = 10.dp).clickable {
-                                timePickerDialog.show()
-                            })
-                    },
-                )
+                    )
+                }
+                AnimatedVisibility(visible = checkNotiState.value) {
+                    BottomSheetItem(
+                        icon = R.drawable.time_circle,
+                        title = "Remind me at",
+                        trailingComposable = {
+                            val timePickerDialog = TimePickerDialog(
+                                context,
+                                { _, hour: Int, minute: Int ->
+                                    time.value = "${"%02d".format(hour)}:${
+                                        "%02d".format(minute)
+                                    }"
+                                },
+                                time.value.substring(0, 2).toInt(),
+                                time.value.substring(3).toInt(),
+                                true
+                            )
+                            Text(
+                                text = time.value,
+                                textDecoration = TextDecoration.Underline,
+                                color = Color(0xFF272728),
+                                fontSize = 16.sp,
+                                lineHeight = 26.sp,
+                                modifier = Modifier
+                                    .padding(horizontal = 10.dp)
+                                    .clickable {
+                                        timePickerDialog.show()
+                                    })
+                        },
+                    )
+                }
                 Divider(color = Color(0xFFF1F1F1))
                 BottomSheetItem(
                     icon = R.drawable.discount,
                     title = "Dark mode",
                     trailingComposable = {
-                        val checkState = remember { mutableStateOf(false) }
                         Switch(
-                            checked = checkState.value,
-                            onCheckedChange = { checkState.value = !checkState.value },
+                            checked = checkStateDarkMode.value,
+                            onCheckedChange = {/*Do at trailing lambda*/},
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color(0xFF0E31A3),
                                 uncheckedThumbColor = Color(0xFF868687),
                             )
                         )
                     },
-                )
+                ) {
+                    checkStateDarkMode.value = !checkStateDarkMode.value
+                }
                 Spacer(modifier = Modifier.height(24.dp))
                 BottomSheetItem(
                     icon = R.drawable.info_square,
@@ -215,7 +242,12 @@ fun MenuBottomSheet() {
 @Composable
 fun BottomSheetHeader() {
     Surface {
-        Row(modifier = Modifier.padding(24.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .padding(24.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Surface(
                 modifier = Modifier.size(50.dp), shape = RoundedCornerShape(CornerSize(6.dp))
             ) {
@@ -226,9 +258,13 @@ fun BottomSheetHeader() {
                     modifier = Modifier.size(50.dp),
                 )
             }
-
             Column {
-                Text("DMV Test", fontSize = 16.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    "DMV Test",
+                    fontSize = 16.sp,
+                    lineHeight = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
                 Text(
                     "Version 3.2.4 (110)",
                     color = Color(0xFFB7B7B8),
@@ -244,14 +280,17 @@ fun BottomSheetHeader() {
 
 @Composable
 fun BottomSheetItem(
-    icon: Int = R.drawable.profile, title: String = "Login", trailingComposable: @Composable () -> Unit = {
+    icon: Int = R.drawable.profile,
+    title: String = "Login",
+    trailingComposable: @Composable () -> Unit = {
         Icon(
             Icons.Default.ArrowForwardIos,
             contentDescription = null,
             modifier = Modifier.size(20.dp),
             tint = Color(0xFFC3C3C5)
         )
-    }, onClick: () -> Unit = {}
+    },
+    onClick: () -> Unit = {}
 ) {
     Surface(modifier = Modifier.clickable {
         onClick.invoke()

@@ -67,8 +67,14 @@ fun OnboardingScreen(
 
     val coroutine = rememberCoroutineScope()
 
-    Box(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
-        HorizontalPager(count = listPage.size, modifier = Modifier.fillMaxSize(), state = pagerState) { page ->
+    Box(modifier = Modifier
+        .systemBarsPadding()
+        .fillMaxSize()) {
+        HorizontalPager(
+            count = listPage.size,
+            modifier = Modifier.fillMaxSize(),
+            state = pagerState
+        ) { page ->
             OnBoardingTab(
                 backgroundImageId = listPage[page]["backgroundImageId"] as Int,
                 imageId = listPage[page]["imageId"] as Int,
@@ -86,9 +92,16 @@ fun OnboardingScreen(
                 }
             }
         }
-        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Spacer(modifier = Modifier.weight(1f))
-            HorizontalPagerIndicator(pagerState, activeColor = Color(0xFF0B2EA0), inactiveColor = Color(0xffD7DDF3))
+            HorizontalPagerIndicator(
+                pagerState,
+                activeColor = Color(0xFF0B2EA0),
+                inactiveColor = Color(0xffD7DDF3)
+            )
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
@@ -105,7 +118,9 @@ fun OnBoardingTab(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(backgroundImageId), contentDescription = null, contentScale = ContentScale.Crop
+            painter = painterResource(backgroundImageId),
+            contentDescription = null,
+            contentScale = ContentScale.Crop
         )
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -150,7 +165,9 @@ fun OnBoardingTab(
 fun OnBoardingButton(
     title: String, onClick: () -> Unit = {}
 ) {
-    FilledTonalButton(modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp).fillMaxWidth(),
+    FilledTonalButton(modifier = Modifier
+        .padding(horizontal = 24.dp, vertical = 10.dp)
+        .fillMaxWidth(),
         shape = RoundedCornerShape(corner = CornerSize(12.dp)),
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B2EA0)),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
@@ -159,7 +176,11 @@ fun OnBoardingButton(
             onClick()
         }) {
         Text(
-            text = title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp
+            text = title,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp
         )
     }
 }

@@ -79,7 +79,7 @@ class QuestionViewModel : ViewModel() {
 
             return if (!isForChecking) {
                 val question = getQuestionsByParentId(topicId).first { it.id == questionId.toString() }
-                if (result.choiceSelectedIds.size < question.correctAnswers.size) {
+                if (result.choiceSelectedIds.size < question.correctAnswers.size && result.choiceSelectedIds.isNotEmpty()) {
                     result.copy()
                 } else result.copy().apply {
                     choiceSelectedIds = mutableListOf()

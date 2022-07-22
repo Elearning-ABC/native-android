@@ -31,8 +31,6 @@ import com.alva.codedelaroute.widgets.CustomAlertDialog
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.view_models.TopicViewModel
 import com.alva.codedelaroute.widgets.CustomLinearProgressBar
-import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.insets.systemBarsPadding
 import kotlinx.coroutines.runBlocking
 
 @Composable
@@ -82,34 +80,41 @@ fun TopicListPanel(
     topicViewModel: TopicViewModel,
     questionViewModel: QuestionViewModel
 ) {
-    val percentage = mainTopicProgress.correctNumber.toFloat() / mainTopicProgress.totalQuestionNumber
+    val percentage =
+        mainTopicProgress.correctNumber.toFloat() / mainTopicProgress.totalQuestionNumber
 
-    ProvideWindowInsets {
-        Scaffold(
-            modifier = Modifier.fillMaxSize().systemBarsPadding(true),
-            backgroundColor = Color.Transparent,
-            topBar = { TopicAppBar(navController, parentTopic.name) }) {
-            Column(modifier = Modifier.padding(it).fillMaxSize()) {
-                Box(modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp)) {
-                    CustomLinearProgressBar(
-                        Modifier.height(8.dp).clip(shape = RoundedCornerShape(4.dp)),
-                        Color(0xFFCAD1F5),
-                        Color(0xFF002395),
-                        percentage,
-                    )
-                }
-                TopicProgressPanel(mainTopicProgress)
-                Spacer(modifier = Modifier.height(100.dp))
-                TopicList(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    navController = navController,
-                    mainTopicId = parentTopic.id,
-                    subTopics = subTopics,
-                    subTopicProgressList = subTopicProgressList,
-                    topicViewModel = topicViewModel,
-                    questionViewModel = questionViewModel
+    Scaffold(
+        modifier = Modifier
+            .systemBarsPadding()
+            .fillMaxSize(),
+        backgroundColor = Color.Transparent,
+        topBar = { TopicAppBar(navController, parentTopic.name) }) {
+        Column(modifier = Modifier
+            .padding(it)
+            .fillMaxSize()) {
+            Box(modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp)) {
+                CustomLinearProgressBar(
+                    Modifier
+                        .height(8.dp)
+                        .clip(shape = RoundedCornerShape(4.dp)),
+                    Color(0xFFCAD1F5),
+                    Color(0xFF002395),
+                    percentage,
                 )
             }
+            TopicProgressPanel(mainTopicProgress)
+            Spacer(modifier = Modifier.height(100.dp))
+            TopicList(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                navController = navController,
+                mainTopicId = parentTopic.id,
+                subTopics = subTopics,
+                subTopicProgressList = subTopicProgressList,
+                topicViewModel = topicViewModel,
+                questionViewModel = questionViewModel
+            )
         }
     }
 }
@@ -172,7 +177,9 @@ fun TopicList(
 
 @Composable
 fun TopicProgressPanel(mainTopicProgress: UITopicProgress) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 30.dp).width(150.dp)) {
+    Column(modifier = Modifier
+        .padding(horizontal = 16.dp, vertical = 30.dp)
+        .width(150.dp)) {
         TopicProgressRow("Total", mainTopicProgress.totalQuestionNumber)
         Spacer(modifier = Modifier.height(10.dp))
         TopicProgressRow("Answered", mainTopicProgress.correctNumber)

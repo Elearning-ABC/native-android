@@ -49,6 +49,7 @@ fun TestClockPanel(
                         testProgressId = testProgressId, duration - (countDownTime.value - timeUsed)
                     )
                 }
+                else -> {}
             }
         }
         lifecycle.lifecycle.addObserver(observer)
@@ -89,7 +90,10 @@ fun TestClockPanel(
     val secondString = if (second >= 10) second.toString() else "0${second}"
 
     Surface(
-        modifier = Modifier.padding(16.dp).fillMaxWidth().height(50.dp),
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .height(50.dp),
         shape = RoundedCornerShape(corner = CornerSize(8.dp)),
         tonalElevation = 10.dp,
         shadowElevation = 10.dp
@@ -104,7 +108,11 @@ fun TestClockPanel(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxSize()
         ) {
-            Image(painterResource(R.drawable.alarm_icon), contentDescription = null, modifier = Modifier.size(24.dp))
+            Image(
+                painterResource(R.drawable.alarm_icon),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
             Spacer(modifier = Modifier.width(5.dp))
             Text(
                 "$hourString:$minuteString:$secondString",

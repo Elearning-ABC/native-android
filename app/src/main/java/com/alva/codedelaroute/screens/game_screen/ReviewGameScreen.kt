@@ -20,8 +20,6 @@ import com.alva.codedelaroute.view_models.AppConfigurationViewModel
 import com.alva.codedelaroute.view_models.GameViewModel
 import com.alva.codedelaroute.view_models.QuestionViewModel
 import com.alva.codedelaroute.widgets.CustomToast
-import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.insets.systemBarsPadding
 import io.realm.kotlin.ext.realmListOf
 import kotlinx.coroutines.runBlocking
 
@@ -53,16 +51,26 @@ fun ReviewGameScreen(
         )
     }
 
-    var tempQuestionProgress = tempQuestionProgressList.first { it.questionId == currentQuestion.value.id }
+    var tempQuestionProgress =
+        tempQuestionProgressList.first { it.questionId == currentQuestion.value.id }
 
 
     val checkFinishedQuestion =
-        remember { mutableStateOf(gameViewModel.isFinishQuestion(currentQuestion.value, tempQuestionProgress)) }
+        remember {
+            mutableStateOf(
+                gameViewModel.isFinishQuestion(
+                    currentQuestion.value,
+                    tempQuestionProgress
+                )
+            )
+        }
 
     val answerStatus = remember {
         mutableStateOf(
             gameViewModel.getAnswerStatus(
-                question = currentQuestion.value, currentQuestionProgress = tempQuestionProgress, GameType.Review
+                question = currentQuestion.value,
+                currentQuestionProgress = tempQuestionProgress,
+                GameType.Review
             )
         )
     }
@@ -75,9 +83,7 @@ fun ReviewGameScreen(
 
     val dataStore = AppConfigurationViewModel(context)
 
-    val fontSize = dataStore.getFontSizeScale.collectAsState(1.0f)
-
-    val sliderValue = remember { mutableStateOf(fontSize.value!!) }
+    val sliderValue = dataStore.getFontSizeScale.collectAsState(1.0f) as MutableState<Float>
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -85,94 +91,107 @@ fun ReviewGameScreen(
             contentDescription = null,
             contentScale = ContentScale.Crop
         )
-        ProvideWindowInsets {
-            Scaffold(topBar = {
-                QuestionAppBar(
-                    appBarTitle = reviewQuestionProperty.name + "(${questions.size})", fontSizeScale = sliderValue
-                ) {
-                    navController.popBackStack()
-                }
-            },
-                backgroundColor = Color.Transparent,
-                contentColor = Color.Transparent,
-                modifier = Modifier.fillMaxSize().systemBarsPadding(true),
-                bottomBar = {
-                    QuestionBottomBar(bookmark = bookmark, onFlagClick = {}, onBookMarkClick = {
-                        runBlocking {
-                            bookmark.value = !bookmark.value
-                            questionViewModel.saveBookmarkToRepo(
-                                tempQuestionProgress.questionId.toLong(),
-                                tempQuestionProgress.topicId.toLong(),
-                                boolean = bookmark.value
+        Scaffold(topBar = {
+            QuestionAppBar(
+                appBarTitle = reviewQuestionProperty.name + "(${questions.size})",
+                fontSizeScale = sliderValue
+            ) {
+                navController.popBackStack()
+            }
+        },
+            backgroundColor = Color.Transparent,
+            contentColor = Color.Transparent,
+            modifier = Modifier
+                .systemBarsPadding()
+                .fillMaxSize(),
+            bottomBar = {
+                QuestionBottomBar(bookmark = bookmark, onFlagClick = {}, onBookMarkClick = {
+                    runBlocking {
+                        bookmark.value = !bookmark.value
+                        questionViewModel.saveBookmarkToRepo(
+                            tempQuestionProgress.questionId.toLong(),
+                            tempQuestionProgress.topicId.toLong(),
+                            boolean = bookmark.value
+                        )
+                        if (bookmark.value) {
+                            CustomToast.showToast(
+                                context = context,
+                                message = "Added to favorites!",
+                                icon = R.drawable.check_circle,
+                                textColor = R.color.toast_success_text_color,
+                                toastBackgroundColor = R.color.toast_success_background_color,
                             )
-                            if (bookmark.value) {
-                                CustomToast.showToast(
-                                    context = context,
-                                    message = "Added to favorites!",
-                                    icon = R.drawable.check_circle,
-                                    textColor = R.color.toast_success_text_color,
-                                    toastBackgroundColor = R.color.toast_success_background_color,
-                                )
-                            } else {
-                                CustomToast.showToast(
-                                    context = context,
-                                    message = "Removed from favorites!",
-                                    icon = R.drawable.check_circle,
-                                    textColor = R.color.toast_success_text_color,
-                                    toastBackgroundColor = R.color.toast_success_background_color,
-                                )
-                            }
-                        }
-                    }, onNextClick = {
-                        if (tempQuestionProgressList.filter { it.boxNum == 1 }.size == questions.size) {
-                            navController.popBackStack()
                         } else {
-                            if (gameViewModel.isFinishQuestion(currentQuestion.value, tempQuestionProgress)) {
-                                runBlocking {
-                                    currentQuestion.value =
-                                        gameViewModel.getNextGameQuestion(questions, tempQuestionProgressList)
-
-                                    tempQuestionProgress =
-                                        tempQuestionProgressList.first { it.questionId == currentQuestion.value.id }
-
-                                    if (tempQuestionProgress.boxNum != 0) tempQuestionProgress.choiceSelectedIds =
-                                        realmListOf()
-
-                                    checkFinishedQuestion.value =
-                                        gameViewModel.isFinishQuestion(currentQuestion.value, tempQuestionProgress)
-
-                                    answerStatus.value = gameViewModel.getAnswerStatus(
-                                        question = currentQuestion.value,
-                                        currentQuestionProgress = tempQuestionProgress,
-                                        gameType = GameType.Review
+                            CustomToast.showToast(
+                                context = context,
+                                message = "Removed from favorites!",
+                                icon = R.drawable.check_circle,
+                                textColor = R.color.toast_success_text_color,
+                                toastBackgroundColor = R.color.toast_success_background_color,
+                            )
+                        }
+                    }
+                }, onNextClick = {
+                    if (tempQuestionProgressList.filter { it.boxNum == 1 }.size == questions.size) {
+                        navController.popBackStack()
+                    } else {
+                        if (gameViewModel.isFinishQuestion(
+                                currentQuestion.value,
+                                tempQuestionProgress
+                            )
+                        ) {
+                            runBlocking {
+                                currentQuestion.value =
+                                    gameViewModel.getNextGameQuestion(
+                                        questions,
+                                        tempQuestionProgressList
                                     )
 
-                                    bookmark.value = tempQuestionProgress.bookmark
-                                }
+                                tempQuestionProgress =
+                                    tempQuestionProgressList.first { it.questionId == currentQuestion.value.id }
+
+                                if (tempQuestionProgress.boxNum != 0) tempQuestionProgress.choiceSelectedIds =
+                                    realmListOf()
+
+                                checkFinishedQuestion.value =
+                                    gameViewModel.isFinishQuestion(
+                                        currentQuestion.value,
+                                        tempQuestionProgress
+                                    )
+
+                                answerStatus.value = gameViewModel.getAnswerStatus(
+                                    question = currentQuestion.value,
+                                    currentQuestionProgress = tempQuestionProgress,
+                                    gameType = GameType.Review
+                                )
+
+                                bookmark.value = tempQuestionProgress.bookmark
                             }
                         }
-                    })
-                }) { innerPadding ->
-                Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                    ReviewQuestionProgressBar(
-                        questionViewModel = questionViewModel,
-                        questionProgressList = tempQuestionProgressList,
-                        checkFinishedQuestion = checkFinishedQuestion
-                    )
-                    GamePanel(
-                        modifier = Modifier.weight(1f),
-                        gameType = GameType.Review,
-                        currentQuestion = currentQuestion,
-                        questionList = questions,
-                        answerStatus = answerStatus,
-                        questionViewModel = questionViewModel,
-                        gameViewModel = gameViewModel,
-                        questionProgress = tempQuestionProgress,
-                        checkFinishedQuestion = checkFinishedQuestion,
-                        sliderValue = sliderValue,
-                        showExplanation = showExplanation
-                    )
-                }
+                    }
+                })
+            }) { innerPadding ->
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)) {
+                ReviewQuestionProgressBar(
+                    questionViewModel = questionViewModel,
+                    questionProgressList = tempQuestionProgressList,
+                    checkFinishedQuestion = checkFinishedQuestion
+                )
+                GamePanel(
+                    modifier = Modifier.weight(1f),
+                    gameType = GameType.Review,
+                    currentQuestion = currentQuestion,
+                    questionList = questions,
+                    answerStatus = answerStatus,
+                    questionViewModel = questionViewModel,
+                    gameViewModel = gameViewModel,
+                    questionProgress = tempQuestionProgress,
+                    checkFinishedQuestion = checkFinishedQuestion,
+                    sliderValue = sliderValue,
+                    showExplanation = showExplanation
+                )
             }
         }
     }

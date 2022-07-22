@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.accompanist.insets.ProvideWindowInsets
 import com.alva.codedelaroute.R
 import com.alva.codedelaroute.navigations.Routes
 import com.alva.codedelaroute.widgets.CustomAlertDialog
@@ -96,96 +95,101 @@ fun TopicPassedScreen(
         )
     }
 
-    val selectedItem = remember { mutableStateOf(listForChart.value.first()["questionToday"] as Int) }
+    val selectedItem =
+        remember { mutableStateOf(listForChart.value.first()["questionToday"] as Int) }
 
     val context = LocalContext.current
 
-    ProvideWindowInsets {
-        Scaffold(topBar = {
-            SmallTopAppBar(navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = null)
-                }
-            }, title = {
-                Text(
-                    mainTopic.name + ": " + subTopic.name,
-                    color = Color(0xFF0C1827),
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 18.sp,
-                    lineHeight = 24.sp
-                )
-            })
-        }, modifier = Modifier.systemBarsPadding()) {
-            Surface(modifier = Modifier.padding(it).fillMaxSize(), color = Color.Transparent) {
-                Image(
-                    painter = painterResource(R.drawable.background),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop
-                )
-                LazyColumn(modifier = Modifier.padding(vertical = 20.dp).fillMaxSize()) {
-                    item {
-                        Column(
-                            modifier = Modifier.padding(horizontal = 52.dp).fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                "Congratulations!",
-                                textAlign = TextAlign.Center,
-                                color = Color(0xFF002395),
-                                fontSize = 24.sp,
-                                lineHeight = 32.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.size(5.dp))
-                            Text(
-                                "You’ve successfully completed part ${subTopic.name.last()}!",
-                                textAlign = TextAlign.Center,
-                                color = Color(0xFF272728),
-                                fontSize = 16.sp,
-                                lineHeight = 22.sp,
-                            )
-                            Spacer(modifier = Modifier.size(5.dp))
-                            Box(modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp)) {
-                                Image(
-                                    painter = painterResource(R.drawable.success_human),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.FillWidth,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                            Spacer(modifier = Modifier.size(10.dp))
-                            Text(
-                                "Let's take a look at your study progress today",
-                                textAlign = TextAlign.Center,
-                                color = Color.Black,
-                                fontSize = 18.sp,
-                                lineHeight = 24.sp,
-                                fontWeight = FontWeight.SemiBold
+    Scaffold(topBar = {
+        SmallTopAppBar(navigationIcon = {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = null)
+            }
+        }, title = {
+            Text(
+                mainTopic.name + ": " + subTopic.name,
+                color = Color(0xFF0C1827),
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp,
+                lineHeight = 24.sp
+            )
+        })
+    }, modifier = Modifier.systemBarsPadding()) {
+        Surface(modifier = Modifier
+            .padding(it)
+            .fillMaxSize(), color = Color.Transparent) {
+            Image(
+                painter = painterResource(R.drawable.background),
+                contentDescription = null,
+                contentScale = ContentScale.Crop
+            )
+            LazyColumn(modifier = Modifier
+                .padding(vertical = 20.dp)
+                .fillMaxSize()) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = 52.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "Congratulations!",
+                            textAlign = TextAlign.Center,
+                            color = Color(0xFF002395),
+                            fontSize = 24.sp,
+                            lineHeight = 32.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.size(5.dp))
+                        Text(
+                            "You’ve successfully completed part ${subTopic.name.last()}!",
+                            textAlign = TextAlign.Center,
+                            color = Color(0xFF272728),
+                            fontSize = 16.sp,
+                            lineHeight = 22.sp,
+                        )
+                        Spacer(modifier = Modifier.size(5.dp))
+                        Box(modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp)) {
+                            Image(
+                                painter = painterResource(R.drawable.success_human),
+                                contentDescription = null,
+                                contentScale = ContentScale.FillWidth,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
-                        Spacer(modifier = Modifier.size(20.dp))
-                        BarChartCanvas(
-                            canvasHeight = 240.dp, list = listForChart.value
-                        ) { date, questions, passRate ->
-                            selectedItem.value = questions
-                            CustomToast.showToast(
-                                context,
-                                "You had answered $questions/400 questions with $passRate% pass rate at $date",
-                                icon = R.drawable.check_circle,
-                                textColor = R.color.toast_success_text_color,
-                                toastBackgroundColor = R.color.toast_success_background_color
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(140.dp))
+                        Spacer(modifier = Modifier.size(10.dp))
+                        Text(
+                            "Let's take a look at your study progress today",
+                            textAlign = TextAlign.Center,
+                            color = Color.Black,
+                            fontSize = 18.sp,
+                            lineHeight = 24.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
+                    Spacer(modifier = Modifier.size(20.dp))
+                    BarChartCanvas(
+                        canvasHeight = 240.dp, list = listForChart.value
+                    ) { date, questions, passRate ->
+                        selectedItem.value = questions
+                        CustomToast.showToast(
+                            context,
+                            "You had answered $questions/400 questions with $passRate% pass rate at $date",
+                            icon = R.drawable.check_circle,
+                            textColor = R.color.toast_success_text_color,
+                            toastBackgroundColor = R.color.toast_success_background_color
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(140.dp))
                 }
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    ControlPanel(
-                        navController, nextTopicId, openDialog
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
+            }
+            Column(modifier = Modifier.fillMaxSize()) {
+                Spacer(modifier = Modifier.weight(1f))
+                ControlPanel(
+                    navController, nextTopicId, openDialog
+                )
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }
@@ -221,7 +225,9 @@ fun ControlPanel(
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
         CustomButton(
-            modifier = Modifier.weight(1f).padding(start = 24.dp, end = 4.dp, top = 10.dp),
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 24.dp, end = 4.dp, top = 10.dp),
             buttonColor = Color(0xFFED2939),
             textColor = Color.White,
             buttonTitle = "Try Again"
@@ -230,7 +236,9 @@ fun ControlPanel(
         }
 
         CustomButton(
-            modifier = Modifier.weight(1f).padding(start = 4.dp, end = 24.dp, top = 10.dp),
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 4.dp, end = 24.dp, top = 10.dp),
             buttonColor = Color(0xFF002395),
             textColor = Color.White,
             buttonTitle = if (nextTopicId == null) "Go back" else "Go to next part"
@@ -257,7 +265,10 @@ fun CustomButton(
     ElevatedButton(
         onClick = onClick,
         modifier = modifier,
-        colors = ButtonDefaults.buttonColors(containerColor = buttonColor, contentColor = textColor),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = buttonColor,
+            contentColor = textColor
+        ),
         shape = RoundedCornerShape(corner = CornerSize(12.dp)),
     ) {
         Text(buttonTitle,

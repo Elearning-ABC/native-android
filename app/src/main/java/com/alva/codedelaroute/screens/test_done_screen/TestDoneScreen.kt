@@ -39,10 +39,8 @@ import com.alva.codedelaroute.widgets.ArcProgressBar
 import com.alva.codedelaroute.widgets.CustomAlertDialog
 import com.alva.codedelaroute.widgets.CustomButton
 import com.alva.codedelaroute.widgets.CustomToast
-import com.google.accompanist.insets.ProvideWindowInsets
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlin.math.roundToInt
 
 @Composable
 fun TestDoneScreen(navController: NavController, testProgressId: String) {
@@ -60,7 +58,8 @@ fun TestDoneScreen(navController: NavController, testProgressId: String) {
 
     val coroutine = rememberCoroutineScope()
 
-    val checkPassed = (testInfoViewModel.getTestProgressTruePercentage(testProgress) * 100) >= testInfo.percentPassed
+    val checkPassed =
+        (testInfoViewModel.getTestProgressTruePercentage(testProgress) * 100) >= testInfo.percentPassed
 
     val context = LocalContext.current
 
@@ -96,135 +95,152 @@ fun TestDoneScreen(navController: NavController, testProgressId: String) {
         }
     }
 
-    ProvideWindowInsets {
-        Surface(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
-            Scaffold(topBar = {
-                SmallTopAppBar(title = {
-                    Text(
-                        when (testProgress.testSettingId) {
-                            TestSetting.Easy -> "Easy Test"
-                            TestSetting.Medium -> "Medium Test"
-                            TestSetting.Hardest -> "Hardest Test"
-                        },
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 18.sp,
-                        lineHeight = 24.sp,
-                        fontFamily = PoppinsFont,
-                    )
-                }, navigationIcon = {
-                    IconButton(onClick = {
-                        navController.popBackStack()
-                    }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+    Surface(
+        modifier = Modifier
+            .systemBarsPadding()
+            .fillMaxSize()
+    ) {
+        Scaffold(topBar = {
+            SmallTopAppBar(title = {
+                Text(
+                    when (testProgress.testSettingId) {
+                        TestSetting.Easy -> "Easy Test"
+                        TestSetting.Medium -> "Medium Test"
+                        TestSetting.Hardest -> "Hardest Test"
+                    },
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                    lineHeight = 24.sp,
+                    fontFamily = PoppinsFont,
+                )
+            }, navigationIcon = {
+                IconButton(onClick = {
+                    navController.popBackStack()
+                }) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = null)
+                }
+            })
+        }) {
+            Surface(
+                modifier = Modifier
+                    .padding(it)
+                    .fillMaxSize()
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.background),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop
+                )
+                Column {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
+                        ArcProgressBar(
+                            percent = 1f,
+                            thickness = 15.dp,
+                            boxSize = 180.dp,
+                            backgroundIndicatorColor = Color.Transparent,
+                            foregroundIndicatorColor = Color(0xffED2939).copy(alpha = 0.7f),
+                            isShowText = false
+                        )
+                        ArcProgressBar(
+                            percent = testInfoViewModel.getTestProgressTruePercentage(testProgress = testProgress),
+                            thickness = 15.dp,
+                            boxSize = 180.dp,
+                            backgroundIndicatorColor = Color.Transparent,
+                            foregroundIndicatorColor = Color(0xff14CA9E)
+                        )
                     }
-                })
-            }) {
-                Surface(modifier = Modifier.padding(it).fillMaxSize()) {
-                    Image(
-                        painter = painterResource(id = R.drawable.background),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop
-                    )
-                    Column {
-                        Spacer(modifier = Modifier.height(20.dp))
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
-                            ArcProgressBar(
-                                percent = 1f,
-                                thickness = 15.dp,
-                                boxSize = 180.dp,
-                                backgroundIndicatorColor = Color.Transparent,
-                                foregroundIndicatorColor = Color(0xffED2939).copy(alpha = 0.7f),
-                                isShowText = false
+                }
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Spacer(modifier = Modifier.height(130.dp))
+                    Row {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                if (checkPassed) "Such an excellent performance!" else "Not enough to pass :(",
+                                color = Color(0xff002395),
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Bold,
+                                lineHeight = 32.sp,
+                                fontFamily = PoppinsFont,
                             )
-                            ArcProgressBar(
-                                percent = testInfoViewModel.getTestProgressTruePercentage(testProgress = testProgress),
-                                thickness = 15.dp,
-                                boxSize = 180.dp,
-                                backgroundIndicatorColor = Color.Transparent,
-                                foregroundIndicatorColor = Color(0xff14CA9E)
+                            Spacer(modifier = Modifier.height(5.dp))
+                            Text(
+                                if (checkPassed) "Good job! You've successfully passed your test. Let's ace all the tests available to increase your passing possibility!" else "Yowch! That hurt. Failing an exam always does. But hey, that was just one try. Get your notes together and try again. You can do it!",
+                                color = Color(0xff272728),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                lineHeight = 21.28.sp,
+                                fontFamily = PoppinsFont,
+                            )
+                        }
+                        Image(
+                            painterResource(if (checkPassed) R.drawable.test_successful else R.drawable.test_failed),
+                            contentDescription = null,
+                            contentScale = ContentScale.FillWidth,
+                            modifier = Modifier.width(140.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .shadow(elevation = 0.dp)
+                    ) {
+                        items(testInfo.testQuestionData.size) {
+                            ThreadCard(
+                                title = topicViewModel.getTopicById(testInfo.testQuestionData[it].topicId.toLong()).name,
+                                percentage = testInfoViewModel.calculateTestCorrectNumberPerTopic(
+                                    topicId = testInfo.testQuestionData[it].topicId,
+                                    testInfo = testInfo,
+                                    testProgress = testProgress
+                                )
                             )
                         }
                     }
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Spacer(modifier = Modifier.height(130.dp))
-                        Row {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    if (checkPassed) "Such an excellent performance!" else "Not enough to pass :(",
-                                    color = Color(0xff002395),
-                                    fontSize = 26.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    lineHeight = 32.sp,
-                                    fontFamily = PoppinsFont,
-                                )
-                                Spacer(modifier = Modifier.height(5.dp))
-                                Text(
-                                    if (checkPassed) "Good job! You've successfully passed your test. Let's ace all the tests available to increase your passing possibility!" else "Yowch! That hurt. Failing an exam always does. But hey, that was just one try. Get your notes together and try again. You can do it!",
-                                    color = Color(0xff272728),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    lineHeight = 21.28.sp,
-                                    fontFamily = PoppinsFont,
-                                )
-                            }
-                            Image(
-                                painterResource(if (checkPassed) R.drawable.test_successful else R.drawable.test_failed),
-                                contentDescription = null,
-                                contentScale = ContentScale.FillWidth,
-                                modifier = Modifier.width(140.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        LazyColumn(modifier = Modifier.weight(1f).shadow(elevation = 0.dp)) {
-                            items(testInfo.testQuestionData.size) {
-                                ThreadCard(
-                                    title = topicViewModel.getTopicById(testInfo.testQuestionData[it].topicId.toLong()).name,
-                                    percentage = testInfoViewModel.calculateTestCorrectNumberPerTopic(
-                                        topicId = testInfo.testQuestionData[it].topicId,
-                                        testInfo = testInfo,
-                                        testProgress = testProgress
-                                    )
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row {
-                            CustomButton(
-                                modifier = Modifier.weight(1f).padding(end = 5.dp, top = 5.dp, bottom = 5.dp),
-                                title = "Review",
-                                backgroundColor = Color(0xffE6EBF9),
-                                textColor = Color.Black,
-                            ) {
-                                openReviewDialog.value = true
-                            }
-                            CustomButton(
-                                modifier = Modifier.weight(1f).padding(start = 5.dp, top = 5.dp, bottom = 5.dp),
-                                title = "Try Again",
-                                backgroundColor = Color(0xffED2939),
-                                textColor = Color.White
-                            ) {
-                                openResetDialog.value = true
-                            }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row {
+                        CustomButton(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 5.dp, top = 5.dp, bottom = 5.dp),
+                            title = "Review",
+                            backgroundColor = Color(0xffE6EBF9),
+                            textColor = Color.Black,
+                        ) {
+                            openReviewDialog.value = true
                         }
                         CustomButton(
-                            modifier = Modifier.padding(vertical = 5.dp).fillMaxWidth(),
-                            title = "Continue",
-                            backgroundColor = Color(0xff0B2EA0),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 5.dp, top = 5.dp, bottom = 5.dp),
+                            title = "Try Again",
+                            backgroundColor = Color(0xffED2939),
                             textColor = Color.White
                         ) {
-                            val nextTestInfoId = testInfoViewModel.getNextTestInfoId(testInfo)
-                            if (nextTestInfoId == null) {
-                                CustomToast.showToast(
-                                    context = context,
-                                    message = "Function unavailable at this time",
-                                    icon = R.drawable.alert_triangle,
-                                    textColor = R.color.toast_alert_text_color,
-                                    toastBackgroundColor = R.color.toast_alert_background_color
-                                )
-                            } else {
-                                navController.popBackStack()
-                                navController.navigate(Routes.TestOptionScreen.name + "/$nextTestInfoId")
-                            }
+                            openResetDialog.value = true
+                        }
+                    }
+                    CustomButton(
+                        modifier = Modifier
+                            .padding(vertical = 5.dp)
+                            .fillMaxWidth(),
+                        title = "Continue",
+                        backgroundColor = Color(0xff0B2EA0),
+                        textColor = Color.White
+                    ) {
+                        val nextTestInfoId = testInfoViewModel.getNextTestInfoId(testInfo)
+                        if (nextTestInfoId == null) {
+                            CustomToast.showToast(
+                                context = context,
+                                message = "Function unavailable at this time",
+                                icon = R.drawable.alert_triangle,
+                                textColor = R.color.toast_alert_text_color,
+                                toastBackgroundColor = R.color.toast_alert_background_color
+                            )
+                        } else {
+                            navController.popBackStack()
+                            navController.popBackStack()
+                            navController.navigate(Routes.TestOptionScreen.name + "/$nextTestInfoId")
                         }
                     }
                 }

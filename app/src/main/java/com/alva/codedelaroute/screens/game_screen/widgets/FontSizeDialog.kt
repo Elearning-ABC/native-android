@@ -1,5 +1,6 @@
 package com.alva.codedelaroute.screens.game_screen.widgets
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,17 +44,27 @@ fun FontSizeDialog(
 
     val coroutine = rememberCoroutineScope()
 
+    val fontSize = dataStore.getFontSizeScale.collectAsState(initial = 1.0f)
+
     if (openDialog.value) {
         Dialog(
-            onDismissRequest = { openDialog.value = false },
+            onDismissRequest = {
+                runBlocking {
+                    dataStore.saveFontSizeScale(fontSizeScale = fontSizeScale.value)
+                    Log.d("heelo", fontSize.value.toString())
+                    openDialog.value = false
+                }
+            },
             properties = DialogProperties(
                 dismissOnClickOutside = true,
                 dismissOnBackPress = true,
                 securePolicy = SecureFlagPolicy.SecureOn
             )
         ) {
-
-            Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(corner = CornerSize(8.dp))) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(corner = CornerSize(8.dp))
+            ) {
                 Column(
                     modifier = Modifier.padding(horizontal = 30.dp, vertical = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -68,10 +80,7 @@ fun FontSizeDialog(
                     SliderWithLabel(
                         value = fontSizeScale.value,
                         onValueChange = {
-                            coroutine.launch {
-                                fontSizeScale.value = it
-                                dataStore.saveFontSizeScale(it)
-                            }
+                            fontSizeScale.value = it
                         },
                         thumbRadius = 10.dp,
                         trackHeight = 10.dp,
